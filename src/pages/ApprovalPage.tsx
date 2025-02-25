@@ -1,18 +1,18 @@
-import React, { useState } from 'react';
-import { Send } from 'lucide-react';
-import { PhotoDisplay } from '../components/PhotoDisplay';
-import { StampToggle } from '../components/StampToggle';
-import { QualitySelector } from '../components/QualitySelector';
-import { CommentBox } from '../components/CommentBox';
-import type { Photo, ApprovalData } from '../types';
+import React, { useState } from "react";
+import { Send } from "lucide-react";
+import { PhotoDisplay } from "../components/PhotoDisplay";
+import { StampToggle } from "../components/StampToggle";
+import { QualitySelector } from "../components/QualitySelector";
+import { CommentBox } from "../components/CommentBox";
+import type { Photo, ApprovalData } from "../types";
 
 // Mock data for demonstration
 const mockPhoto: Photo = {
-  photoId: '12345',
-  photoUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80',
-  status: 'pending',
+  photoId: "12345",
+  photoUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80",
+  status: "pending",
   metadata: {
-    uploader: 'John Doe',
+    uploader: "John Doe",
     timestamp: new Date().toISOString(),
   },
 };
@@ -20,19 +20,19 @@ const mockPhoto: Photo = {
 export function ApprovalPage() {
   const [approvalData, setApprovalData] = useState<ApprovalData>({
     faceStamp: false,
-    quality: null as 'OK' | 'NG' | null,
-    comment: '',
+    quality: "OK" as "OK" | "NG",
+    comment: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!approvalData.quality) {
-      alert('Please select a quality rating (OK/NG)');
+      alert("Please select a quality rating (OK/NG)");
       return;
     }
 
     // TODO: Implement API call
-    console.log('Submitting approval:', approvalData);
+    console.log("Submitting approval:", approvalData);
   };
 
   return (
