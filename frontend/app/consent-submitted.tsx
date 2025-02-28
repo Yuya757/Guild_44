@@ -1,77 +1,57 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Share } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
 import { CircleCheck as CheckCircle, Download, Share2 } from 'lucide-react-native';
+import { router } from 'expo-router';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
 export default function ConsentSubmittedScreen() {
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <CheckCircle size={80} color="#10B981" style={styles.icon} />
-        
-        <Text style={styles.title}>同意書が送信されました！</Text>
-        
+      <Animated.View entering={FadeInDown.delay(100)} style={styles.iconContainer}>
+        <CheckCircle size={80} {...{color: "#10B981"} as any} style={styles.icon} />
+      </Animated.View>
+
+      <Animated.View entering={FadeInDown.delay(200)} style={styles.contentContainer}>
+        <Text style={styles.title}>承諾が完了しました！</Text>
+
         <Text style={styles.description}>
-          画像使用許可の同意が正常に記録されました。確認メールがすべての関係者に同意書のコピーとともに送信されました。
+          これで写真の使用に同意したことになります。承諾証明書をダウンロードできます。
         </Text>
-        
-        <View style={styles.consentSummary}>
-          <Text style={styles.summaryTitle}>同意書参照番号</Text>
-          <Text style={styles.referenceNumber}>IPCS-2025-06-15-0042</Text>
-          
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>日付:</Text>
-            <Text style={styles.summaryValue}>2025年6月15日</Text>
-          </View>
-          
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>状態:</Text>
-            <View style={styles.statusContainer}>
-              <View style={styles.statusIndicator} />
-              <Text style={styles.statusText}>有効</Text>
-            </View>
-          </View>
-          
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>有効期限:</Text>
-            <Text style={styles.summaryValue}>2026年6月15日</Text>
-          </View>
-        </View>
-        
-        <View style={styles.actionsContainer}>
-          <TouchableOpacity style={styles.actionButton}>
-            <Download size={20} color="#3B82F6" />
-            <Text style={styles.actionButtonText}>PDFをダウンロード</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.actionButton}>
-            <Share2 size={20} color="#3B82F6" />
-            <Text style={styles.actionButtonText}>共有</Text>
-          </TouchableOpacity>
-        </View>
-        
+
         <View style={styles.infoContainer}>
-          <Text style={styles.infoTitle}>次のステップ</Text>
+          <Text style={styles.infoTitle}>次に行うこと：</Text>
+          
           <View style={styles.infoItem}>
             <View style={styles.infoNumber}>
               <Text style={styles.infoNumberText}>1</Text>
             </View>
-            <Text style={styles.infoText}>指定された許可に従って画像を使用できるようになりました</Text>
+            <Text style={styles.infoText}>
+              証明書をダウンロードして安全な場所に保管してください
+            </Text>
           </View>
+          
           <View style={styles.infoItem}>
             <View style={styles.infoNumber}>
               <Text style={styles.infoNumberText}>2</Text>
             </View>
-            <Text style={styles.infoText}>ダッシュボードからいつでもこの同意書を表示または管理できます</Text>
-          </View>
-          <View style={styles.infoItem}>
-            <View style={styles.infoNumber}>
-              <Text style={styles.infoNumberText}>3</Text>
-            </View>
-            <Text style={styles.infoText}>同意の有効期限が切れる30日前にリマインダーが届きます</Text>
+            <Text style={styles.infoText}>
+              証明書には承諾の詳細が記載されています
+            </Text>
           </View>
         </View>
-        
+
+        <TouchableOpacity style={styles.downloadContainer} onPress={() => alert('証明書をダウンロードしました')}>
+          <Download size={20} {...{color: "#3B82F6"} as any} />
+          <Text style={styles.actionButtonText}>承諾証明書をダウンロード</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.shareContainer} onPress={() => Share.share({message: '写真使用の承諾が完了しました。'})}>
+          <Share2 size={20} {...{color: "#3B82F6"} as any} />
+          <Text style={styles.actionButtonText}>承諾情報を共有</Text>
+        </TouchableOpacity>
+      </Animated.View>
+
+      <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={styles.button}
           onPress={() => router.replace('/')}
@@ -88,14 +68,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8FAFC',
   },
-  content: {
+  iconContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  icon: {
+    marginBottom: 24,
+  },
+  contentContainer: {
     flex: 1,
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 40,
-  },
-  icon: {
-    marginBottom: 24,
   },
   title: {
     fontSize: 24,
@@ -111,85 +96,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 32,
     lineHeight: 24,
-  },
-  consentSummary: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 24,
-    width: '100%',
-    shadowColor: '#64748B',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  summaryTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#0F172A',
-    marginBottom: 8,
-  },
-  referenceNumber: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#3B82F6',
-    marginBottom: 16,
-  },
-  summaryItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  summaryLabel: {
-    width: 70,
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#64748B',
-  },
-  summaryValue: {
-    fontSize: 14,
-    fontWeight: '400',
-    color: '#0F172A',
-  },
-  statusContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  statusIndicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#10B981',
-    marginRight: 6,
-  },
-  statusText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#10B981',
-  },
-  actionsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    marginBottom: 32,
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#EFF6FF',
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    flex: 1,
-    marginHorizontal: 6,
-  },
-  actionButtonText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#3B82F6',
-    marginLeft: 8,
   },
   infoContainer: {
     width: '100%',
@@ -227,6 +133,36 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     color: '#64748B',
     lineHeight: 20,
+  },
+  downloadContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#EFF6FF',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+  },
+  shareContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#EFF6FF',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+  },
+  actionButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#3B82F6',
+    marginLeft: 8,
+  },
+  buttonContainer: {
+    width: '100%',
+    padding: 20,
   },
   button: {
     backgroundColor: '#3B82F6',

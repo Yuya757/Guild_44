@@ -83,7 +83,7 @@ export default function ScheduledPostDetailsScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <ArrowLeft size={20} color="#0F172A" />
+            <ArrowLeft size={20} {...{color: "#0F172A"} as any} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>投稿詳細</Text>
           <View style={styles.placeholder} />
@@ -101,13 +101,13 @@ export default function ScheduledPostDetailsScreen() {
   const getPlatformIcon = (platform: string) => {
     switch (platform) {
       case 'instagram':
-        return <Instagram size={24} color="#E1306C" />;
+        return <Instagram size={24} {...{color: "#E1306C"} as any} />;
       case 'twitter':
-        return <Twitter size={24} color="#1DA1F2" />;
+        return <Twitter size={24} {...{color: "#1DA1F2"} as any} />;
       case 'facebook':
-        return <Facebook size={24} color="#1877F2" />;
+        return <Facebook size={24} {...{color: "#1877F2"} as any} />;
       case 'snapchat':
-        return <Snapchat size={24} color="#FFFC00" />;
+        return <Snapchat size={24} {...{color: "#FFFC00"} as any} />;
       case 'tiktok':
         // TikTokのアイコンはLucideにないので、テキストで代用
         return <Text style={{fontSize: 20, fontWeight: 'bold', color: '#000000'}}>TikTok</Text>;
@@ -162,11 +162,11 @@ export default function ScheduledPostDetailsScreen() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'approved':
-        return <CheckCircle size={16} color="#10B981" />;
+        return <CheckCircle size={16} {...{color: "#10B981"} as any} />;
       case 'pending':
-        return <Clock size={16} color="#F59E0B" />;
+        return <Clock size={16} {...{color: "#F59E0B"} as any} />;
       case 'denied':
-        return <XCircle size={16} color="#EF4444" />;
+        return <XCircle size={16} {...{color: "#EF4444"} as any} />;
       default:
         return null;
     }
@@ -258,11 +258,11 @@ export default function ScheduledPostDetailsScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <ArrowLeft size={20} color="#0F172A" />
+          <ArrowLeft size={20} {...{color: "#0F172A"} as any} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>投稿詳細</Text>
         <TouchableOpacity style={styles.shareButton} onPress={handleSharePost}>
-          <Share2 size={20} color="#64748B" />
+          <Share2 size={20} {...{color: "#3B82F6"} as any} />
         </TouchableOpacity>
       </View>
 
@@ -278,7 +278,7 @@ export default function ScheduledPostDetailsScreen() {
             style={styles.reportButton}
             onPress={handleReportImage}
           >
-            <AlertTriangle size={20} color="#FFFFFF" />
+            <AlertTriangle size={20} {...{color: "#FFFFFF"} as any} />
           </TouchableOpacity>
           
           <View style={[styles.statusBadge, { backgroundColor: getStatusColor(post.status) + '20' }]}>
@@ -298,11 +298,11 @@ export default function ScheduledPostDetailsScreen() {
             
             <View style={styles.scheduleInfo}>
               <View style={styles.scheduleItem}>
-                <Calendar size={16} color="#64748B" />
+                <Calendar size={16} {...{color: "#64748B"} as any} />
                 <Text style={styles.scheduleText}>{post.scheduledDate}</Text>
               </View>
               <View style={styles.scheduleItem}>
-                <Clock size={16} color="#64748B" />
+                <Clock size={16} {...{color: "#64748B"} as any} />
                 <Text style={styles.scheduleText}>{post.scheduledTime}</Text>
               </View>
             </View>
@@ -435,7 +435,7 @@ export default function ScheduledPostDetailsScreen() {
                 style={styles.editButton}
                 onPress={handleEditPost}
               >
-                <Edit2 size={20} color="#3B82F6" />
+                <Edit2 size={20} {...{color: "#3B82F6"} as any} />
                 <Text style={styles.editButtonText}>編集</Text>
               </TouchableOpacity>
               
@@ -443,7 +443,7 @@ export default function ScheduledPostDetailsScreen() {
                 style={styles.deleteButton}
                 onPress={handleDeletePost}
               >
-                <Trash2 size={20} color="#EF4444" />
+                <Trash2 size={20} {...{color: "#EF4444"} as any} />
                 <Text style={styles.deleteButtonText}>削除</Text>
               </TouchableOpacity>
             </View>

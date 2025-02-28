@@ -7,7 +7,7 @@ export default function RequestSubmittedScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <CheckCircle size={80} color="#10B981" style={styles.icon} />
+        <CheckCircle size={80} {...{color: "#10B981"} as any} style={styles.icon} />
         
         <Text style={styles.title}>申請が完了しました！</Text>
         

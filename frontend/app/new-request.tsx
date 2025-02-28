@@ -151,11 +151,11 @@ export default function NewRequestScreen() {
       ) : (
         <View style={styles.uploadOptions}>
           <TouchableOpacity style={styles.uploadOption} onPress={takePicture}>
-            <Camera size={24} color="#3B82F6" />
+            <Camera size={24} {...{color: "#3B82F6"} as any} />
             <Text style={styles.uploadOptionText}>写真を撮影</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.uploadOption} onPress={uploadImage}>
-            <Upload size={24} color="#3B82F6" />
+            <Upload size={24} {...{color: "#3B82F6"} as any} />
             <Text style={styles.uploadOptionText}>画像をアップロード</Text>
           </TouchableOpacity>
         </View>
@@ -241,7 +241,7 @@ export default function NewRequestScreen() {
           >
             {usagePurpose || '目的を選択'}
           </Text>
-          <ChevronDown size={20} color="#64748B" />
+          <ChevronDown size={20} {...{color: "#64748B"} as any} />
         </TouchableOpacity>
         {showPurposeDropdown && (
           <View style={styles.dropdownMenu}>
@@ -253,7 +253,7 @@ export default function NewRequestScreen() {
               >
                 <Text style={styles.dropdownItemText}>{purpose}</Text>
                 {purpose === usagePurpose && (
-                  <Check size={16} color="#3B82F6" />
+                  <Check size={16} {...{color: "#3B82F6"} as any} />
                 )}
               </TouchableOpacity>
             ))}
@@ -285,7 +285,7 @@ export default function NewRequestScreen() {
             value={usageDuration}
             onChangeText={setUsageDuration}
           />
-          <Calendar size={20} color="#64748B" style={styles.durationIcon} />
+          <Calendar size={20} {...{color: "#64748B"} as any} style={styles.durationIcon} />
         </View>
       </View>
 
@@ -296,7 +296,7 @@ export default function NewRequestScreen() {
         <View
           style={[styles.checkbox, termsAccepted && styles.checkboxChecked]}
         >
-          {termsAccepted && <Check size={12} color="#FFFFFF" />}
+          {termsAccepted && <Check size={12} {...{color: "#FFFFFF"} as any} />}
         </View>
         <Text style={styles.termsText}>
           画像使用許可に関する利用規約に同意します
@@ -309,7 +309,7 @@ export default function NewRequestScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-          <ArrowLeft size={20} color="#0F172A" />
+          <ArrowLeft size={20} {...{color: "#0F172A"} as any} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>新規使用許可申請</Text>
         <View style={styles.placeholder} />

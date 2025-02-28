@@ -79,9 +79,9 @@ export default function ScheduledPostsScreen() {
   const getPlatformIcon = (platform: PlatformType) => {
     switch (platform) {
       case 'instagram':
-        return <Instagram size={20} color="#E1306C" />;
+        return <Instagram size={20} {...{color: "#E1306C"} as any} />;
       case 'twitter':
-        return <Twitter size={20} color="#1DA1F2" />;
+        return <Twitter size={20} {...{color: "#1DA1F2"} as any} />;
       default:
         return null;
     }
@@ -174,9 +174,9 @@ export default function ScheduledPostsScreen() {
         
         <View style={styles.postFooter}>
           <View style={styles.scheduleInfo}>
-            <Calendar size={14} color="#64748B" />
+            <Calendar size={14} {...{color: "#64748B"} as any} />
             <Text style={styles.scheduleText}>{item.scheduledDate}</Text>
-            <Clock size={14} color="#64748B" style={styles.clockIcon} />
+            <Clock size={14} {...{color: "#64748B"} as any} style={styles.clockIcon} />
             <Text style={styles.scheduleText}>{item.scheduledTime}</Text>
           </View>
           
@@ -185,13 +185,13 @@ export default function ScheduledPostsScreen() {
               style={styles.actionButton}
               onPress={() => handleEditPost(item)}
             >
-              <Edit2 size={16} color="#3B82F6" />
+              <Edit2 size={16} {...{color: "#3B82F6"} as any} />
             </TouchableOpacity>
             <TouchableOpacity 
               style={[styles.actionButton, styles.deleteButton]}
               onPress={() => handleDeletePost(item)}
             >
-              <Trash2 size={16} color="#EF4444" />
+              <Trash2 size={16} {...{color: "#EF4444"} as any} />
             </TouchableOpacity>
           </View>
         </View>
@@ -201,7 +201,7 @@ export default function ScheduledPostsScreen() {
         style={styles.detailsButton}
         onPress={() => router.push(`/scheduled-post-details/${item.id}`)}
       >
-        <ChevronRight size={20} color="#94A3B8" />
+        <ChevronRight size={20} {...{color: "#94A3B8"} as any} />
       </TouchableOpacity>
     </Animated.View>
   );
@@ -214,7 +214,7 @@ export default function ScheduledPostsScreen() {
           style={styles.filterButton}
           onPress={() => setShowFilters(!showFilters)}
         >
-          <Filter size={20} color="#64748B" />
+          <Filter size={20} {...{color: "#64748B"} as any} />
         </TouchableOpacity>
       </View>
 
@@ -289,7 +289,7 @@ export default function ScheduledPostsScreen() {
         style={styles.createButton}
         onPress={() => router.push('/create-scheduled-post')}
       >
-        <Plus size={24} color="#FFFFFF" />
+        <Plus size={20} {...{color: "#FFFFFF"} as any} />
       </TouchableOpacity>
     </SafeAreaView>
   );

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ArrowLeft, Calendar, Clock, Instagram, Twitter, ChevronRight } from 'lucide-react-native';
+import { ArrowLeft, Calendar, Clock, Instagram, Twitter, ChevronRight, Facebook, Snail as Snapchat } from 'lucide-react-native';
 
 // モックデータ: 許可リクエスト
 const MOCK_PERMISSION_REQUESTS = [
@@ -57,12 +57,19 @@ export default function PermissionRequestsScreen() {
     return request.status === activeTab;
   });
 
-  const getPlatformIcon = (platform: string) => {
-    switch (platform) {
+  const getPlatformIcon = (platformName: string) => {
+    switch (platformName) {
       case 'instagram':
-        return <Instagram size={20} color="#E1306C" />;
+        return <Instagram size={20} {...{color: "#E1306C"} as any} />;
       case 'twitter':
-        return <Twitter size={20} color="#1DA1F2" />;
+        return <Twitter size={20} {...{color: "#1DA1F2"} as any} />;
+      case 'snapchat':
+        return <Snapchat size={20} {...{color: "#FFFC00"} as any} />;
+      case 'facebook':
+        return <Facebook size={20} {...{color: "#1877F2"} as any} />;
+      case 'tiktok':
+        // TikTokのアイコンはLucideにないので、テキストで代用
+        return <Text style={{fontSize: 14, fontWeight: 'bold', color: '#000000'}}>TT</Text>;
       default:
         return null;
     }
@@ -122,24 +129,27 @@ export default function PermissionRequestsScreen() {
         
         <View style={styles.requestFooter}>
           <View style={styles.scheduleInfo}>
-            <Calendar size={14} color="#64748B" />
+            <Calendar size={14} {...{color: "#64748B"} as any} />
             <Text style={styles.scheduleText}>{item.scheduledDate}</Text>
           </View>
         </View>
       </View>
       
-      <ChevronRight size={20} color="#94A3B8" />
+      <ChevronRight size={20} {...{color: "#94A3B8"} as any} />
     </TouchableOpacity>
   );
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <ArrowLeft size={20} color="#0F172A" />
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <ArrowLeft size={20} {...{color: "#0F172A"} as any} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>許可リクエスト</Text>
-        <View style={styles.placeholder} />
+        <View style={{ width: 40 }} />
       </View>
 
       <View style={styles.tabContainer}>

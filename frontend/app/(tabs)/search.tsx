@@ -170,7 +170,7 @@ export default function SearchScreen() {
           style={styles.reportButton}
           onPress={() => handleReportImage(item)}
         >
-          <AlertTriangle size={16} color="#FFFFFF" />
+          <AlertTriangle size={16} {...{color: "#FFFFFF"} as any} />
         </TouchableOpacity>
       </View>
       <View style={styles.resultInfo}>
@@ -202,7 +202,7 @@ export default function SearchScreen() {
 
       <View style={styles.searchContainer}>
         <View style={styles.searchInputContainer}>
-          <SearchIcon size={20} color="#64748B" style={styles.searchIcon} />
+          <SearchIcon size={20} {...{color: "#64748B"} as any} style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
             placeholder="タイトルまたは所有者で検索"
@@ -212,12 +212,12 @@ export default function SearchScreen() {
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
-              <X size={16} color="#64748B" />
+              <X size={16} {...{color: "#64748B"} as any} />
             </TouchableOpacity>
           )}
         </View>
         <TouchableOpacity style={styles.filterButton}>
-          <Filter size={20} color="#64748B" />
+          <Filter size={20} {...{color: "#64748B"} as any} />
         </TouchableOpacity>
       </View>
 

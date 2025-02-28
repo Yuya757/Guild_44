@@ -28,28 +28,28 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'ホーム',
-          tabBarIcon: ({ color, size }) => <HomeIcon size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <Home size={size} {...{color} as any} />,
         }}
       />
       <Tabs.Screen
         name="notifications"
         options={{
           title: '通知',
-          tabBarIcon: ({ color, size }) => <Bell size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <Bell size={size} {...{color} as any} />,
         }}
       />
       <Tabs.Screen
         name="scheduled"
         options={{
           title: '予約投稿',
-          tabBarIcon: ({ color, size }) => <Calendar size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <Calendar size={size} {...{color} as any} />,
         }}
       />
       <Tabs.Screen
         name="search"
         options={{
           title: '検索',
-          tabBarIcon: ({ color, size }) => <Search size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <Search size={size} {...{color} as any} />,
         }}
       />
     </Tabs>

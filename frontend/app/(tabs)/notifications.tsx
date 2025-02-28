@@ -86,9 +86,9 @@ export default function NotificationsScreen() {
   const getPlatformIcon = (platform: PlatformType) => {
     switch (platform) {
       case 'instagram':
-        return <Instagram size={16} color="#E1306C" />;
+        return <Instagram size={16} {...{color: "#E1306C"} as any} />;
       case 'twitter':
-        return <Twitter size={16} color="#1DA1F2" />;
+        return <Twitter size={16} {...{color: "#1DA1F2"} as any} />;
       default:
         return null;
     }
@@ -97,17 +97,17 @@ export default function NotificationsScreen() {
   const getNotificationIcon = (type: NotificationType) => {
     switch (type) {
       case 'permission_request':
-        return <Bell size={20} color="#3B82F6" />;
+        return <Bell size={20} {...{color: "#3B82F6"} as any} />;
       case 'permission_approved':
-        return <CheckCircle size={20} color="#10B981" />;
+        return <CheckCircle size={20} {...{color: "#10B981"} as any} />;
       case 'permission_denied':
-        return <XCircle size={20} color="#EF4444" />;
+        return <XCircle size={20} {...{color: "#EF4444"} as any} />;
       case 'post_scheduled':
-        return <Calendar size={20} color="#8B5CF6" />;
+        return <Calendar size={20} {...{color: "#8B5CF6"} as any} />;
       case 'post_published':
-        return <Instagram size={20} color="#E1306C" />;
+        return <Instagram size={20} {...{color: "#E1306C"} as any} />;
       default:
-        return <Bell size={20} color="#3B82F6" />;
+        return <Bell size={20} {...{color: "#3B82F6"} as any} />;
     }
   };
 
@@ -170,9 +170,9 @@ export default function NotificationsScreen() {
           </View>
           
           <View style={styles.scheduleInfo}>
-            <Calendar size={14} color="#64748B" />
+            <Calendar size={14} {...{color: "#64748B"} as any} />
             <Text style={styles.scheduleText}>{item.date}</Text>
-            <Clock size={14} color="#64748B" style={styles.clockIcon} />
+            <Clock size={14} {...{color: "#64748B"} as any} style={styles.clockIcon} />
             <Text style={styles.scheduleText}>{item.time}</Text>
           </View>
         </View>
@@ -201,7 +201,7 @@ export default function NotificationsScreen() {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Bell size={60} color="#CBD5E1" />
+            <Bell size={60} {...{color: "#CBD5E1"} as any} />
             <Text style={styles.emptyText}>通知はありません</Text>
           </View>
         }

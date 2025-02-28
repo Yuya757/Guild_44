@@ -19,6 +19,8 @@ type RequestItem = {
   date: string;
   status: StatusType;
   platform?: string;
+  isMyRequest: boolean;
+  deadline: string;
 };
 
 type ScheduledPostItem = {
@@ -36,38 +38,46 @@ const MOCK_REQUESTS = [
   {
     id: '1',
     image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&auto=format&q=80',
-    title: '社員プロフィール写真',
+    title: '友達との旅行写真',
     owner: '田中 花子',
     status: 'approved',
-    date: '2023-10-15',
+    date: '2025-06-15',
     platform: 'instagram',
+    isMyRequest: false,
+    deadline: '2025-07-15'
   },
   {
     id: '2',
     image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&q=80',
-    title: 'マーケティング素材',
+    title: '誕生日パーティー',
     owner: '佐藤 太郎',
     status: 'pending',
-    date: '2023-10-18',
+    date: '2025-06-18',
     platform: 'twitter',
+    isMyRequest: false,
+    deadline: '2025-07-18'
   },
   {
     id: '3',
     image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&auto=format&q=80',
-    title: 'イベント写真',
+    title: '同窓会グループ写真',
     owner: '鈴木 一郎',
     status: 'denied',
-    date: '2023-10-10',
+    date: '2025-06-10',
     platform: 'facebook',
+    isMyRequest: true,
+    deadline: '2025-07-10'
   },
   {
     id: '4',
     image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&auto=format&q=80',
-    title: 'チームビルディング',
+    title: '家族写真',
     owner: '山田 優子',
     status: 'approved',
-    date: '2023-10-05',
+    date: '2025-06-05',
     platform: 'snapchat',
+    isMyRequest: true,
+    deadline: '2025-07-05'
   },
 ];
 
@@ -76,7 +86,7 @@ const MOCK_SCHEDULED_POSTS = [
   {
     id: '1',
     image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&auto=format&q=80',
-    caption: '新しいプロジェクトについて話し合う素晴らしいチームミーティングでした！ #チームワーク #プロジェクト',
+    caption: '素敵な思い出の旅行！友達と最高の時間を過ごしました #旅行 #友情',
     scheduledDate: '2025-06-20',
     scheduledTime: '18:30',
     platform: 'instagram',
@@ -85,7 +95,7 @@ const MOCK_SCHEDULED_POSTS = [
   {
     id: '2',
     image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&q=80',
-    caption: '今日のイベントで素晴らしい人たちと出会いました。ネットワーキングの大切さを実感！ #ビジネス #ネットワーキング',
+    caption: '今日は誕生日パーティーで友達がサプライズしてくれました！ #誕生日 #サプライズ',
     scheduledDate: '2025-06-22',
     scheduledTime: '12:00',
     platform: 'tiktok',
@@ -94,7 +104,7 @@ const MOCK_SCHEDULED_POSTS = [
   {
     id: '3',
     image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&auto=format&q=80',
-    caption: '新しいオフィスでの初日！これからよろしくお願いします。 #新しい始まり #キャリア',
+    caption: '同窓会で懐かしい友達と再会！みんな元気そうで良かった #同窓会 #旧友',
     scheduledDate: '2025-06-25',
     scheduledTime: '09:00',
     platform: 'facebook',
@@ -109,13 +119,13 @@ export default function HomeScreen() {
   const getPlatformIcon = (platform: any) => {
     switch (platform) {
       case 'instagram':
-        return <Instagram size={16} color="#E1306C" />;
+        return <Instagram size={16} {...{color: "#E1306C"} as any} />;
       case 'twitter':
-        return <Twitter size={16} color="#1DA1F2" />;
+        return <Twitter size={16} {...{color: "#1DA1F2"} as any} />;
       case 'facebook':
-        return <Facebook size={16} color="#1877F2" />;
+        return <Facebook size={16} {...{color: "#1877F2"} as any} />;
       case 'snapchat':
-        return <Snapchat size={16} color="#FFFC00" />;
+        return <Snapchat size={16} {...{color: "#FFFC00"} as any} />;
       case 'tiktok':
         // TikTokのアイコンはLucideにないので、テキストで代用
         return <Text style={{fontSize: 12, fontWeight: 'bold', color: '#000000'}}>TT</Text>;
@@ -205,7 +215,7 @@ export default function HomeScreen() {
             style={styles.reportButton}
             onPress={() => handleReportImage(item)}
           >
-            <AlertTriangle size={16} color="#FFFFFF" />
+            <AlertTriangle size={16} {...{color: "#FFFFFF"} as any} />
           </TouchableOpacity>
           <View style={styles.platformBadge}>
             {getPlatformIcon(item.platform)}
@@ -215,6 +225,11 @@ export default function HomeScreen() {
           <Text style={styles.requestTitle} numberOfLines={1}>
             {item.title}
           </Text>
+          <View style={styles.requestTypeContainer}>
+            <Text style={[styles.requestType, { color: item.isMyRequest ? '#3B82F6' : '#10B981' }]}>
+              {item.isMyRequest ? '自分の申請' : '承認依頼'}
+            </Text>
+          </View>
           <Text style={styles.requestOwner} numberOfLines={1}>
             {item.owner}
           </Text>
@@ -263,11 +278,11 @@ export default function HomeScreen() {
           </Text>
           <View style={styles.scheduledPostMeta}>
             <View style={styles.scheduledPostDate}>
-              <Calendar size={12} color="#64748B" />
+              <Calendar size={12} {...{color: "#64748B"} as any} />
               <Text style={styles.scheduledPostDateText}>{item.scheduledDate}</Text>
             </View>
             <View style={styles.scheduledPostTime}>
-              <Clock size={12} color="#64748B" />
+              <Clock size={12} {...{color: "#64748B"} as any} />
               <Text style={styles.scheduledPostTimeText}>{item.scheduledTime}</Text>
             </View>
           </View>
@@ -281,7 +296,7 @@ export default function HomeScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>ホーム</Text>
         <TouchableOpacity style={styles.filterButton}>
-          <Filter size={20} color="#64748B" />
+          <Filter size={20} {...{color: "#64748B"} as any} />
         </TouchableOpacity>
       </View>
 
@@ -290,7 +305,7 @@ export default function HomeScreen() {
           style={styles.requestButton}
           onPress={() => router.push('/create-scheduled-post')}
         >
-          <Plus size={20} color="#FFFFFF" />
+          <Plus size={20} {...{color: "#FFFFFF"} as any} />
           <Text style={styles.requestButtonText}>新規予約投稿を作成</Text>
         </TouchableOpacity>
 
@@ -603,5 +618,14 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     color: '#94A3B8',
     marginLeft: 'auto',
+  },
+  requestTypeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  requestType: {
+    fontSize: 12,
+    fontWeight: '500',
   },
 });

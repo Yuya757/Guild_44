@@ -56,7 +56,7 @@ export default function PermissionRequestScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <ArrowLeft size={20} color="#0F172A" />
+            <ArrowLeft size={20} {...{color: "#0F172A"} as any} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>許可リクエスト</Text>
           <View style={styles.placeholder} />
@@ -74,9 +74,9 @@ export default function PermissionRequestScreen() {
   const getPlatformIcon = (platform: PlatformType) => {
     switch (platform) {
       case 'instagram':
-        return <Instagram size={24} color="#E1306C" />;
+        return <Instagram size={24} {...{color: "#E1306C"} as any} />;
       case 'twitter':
-        return <Twitter size={24} color="#1DA1F2" />;
+        return <Twitter size={24} {...{color: "#1DA1F2"} as any} />;
       default:
         return null;
     }
@@ -138,7 +138,7 @@ export default function PermissionRequestScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <ArrowLeft size={20} color="#0F172A" />
+          <ArrowLeft size={20} {...{color: "#0F172A"} as any} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>許可リクエスト</Text>
         <View style={styles.placeholder} />
@@ -166,11 +166,11 @@ export default function PermissionRequestScreen() {
             <Text style={styles.sectionTitle}>投稿予定日時</Text>
             <View style={styles.scheduleInfo}>
               <View style={styles.scheduleItem}>
-                <Calendar size={16} color="#64748B" />
+                <Calendar size={16} {...{color: "#64748B"} as any} />
                 <Text style={styles.scheduleText}>{request.scheduledDate}</Text>
               </View>
               <View style={styles.scheduleItem}>
-                <Clock size={16} color="#64748B" />
+                <Clock size={16} {...{color: "#64748B"} as any} />
                 <Text style={styles.scheduleText}>{request.scheduledTime}</Text>
               </View>
             </View>
@@ -199,7 +199,7 @@ export default function PermissionRequestScreen() {
               style={styles.denyButton}
               onPress={handleDeny}
             >
-              <X size={20} color="#FFFFFF" />
+              <X size={20} {...{color: "#FFFFFF"} as any} />
               <Text style={styles.buttonText}>却下する</Text>
             </TouchableOpacity>
             
@@ -207,7 +207,7 @@ export default function PermissionRequestScreen() {
               style={styles.approveButton}
               onPress={handleApprove}
             >
-              <Check size={20} color="#FFFFFF" />
+              <Check size={20} {...{color: "#FFFFFF"} as any} />
               <Text style={styles.buttonText}>承認する</Text>
             </TouchableOpacity>
           </View>

@@ -428,7 +428,7 @@ export default function ConsentFormScreen() {
           >
             {usagePurpose || '目的を選択'}
           </Text>
-          <ChevronDown size={20} color="#64748B" />
+          <ChevronDown size={20} {...{color: "#64748B"} as any} />
         </TouchableOpacity>
         {showPurposeDropdown && (
           <View style={styles.dropdownMenu}>
@@ -440,7 +440,7 @@ export default function ConsentFormScreen() {
               >
                 <Text style={styles.dropdownItemText}>{purpose}</Text>
                 {purpose === usagePurpose && (
-                  <Check size={16} color="#3B82F6" />
+                  <Check size={16} {...{color: "#3B82F6"} as any} />
                 )}
               </TouchableOpacity>
             ))}
@@ -479,7 +479,7 @@ export default function ConsentFormScreen() {
           >
             {geographicScope || '地理的範囲を選択'}
           </Text>
-          <MapPin size={20} color="#64748B" />
+          <MapPin size={20} {...{color: "#64748B"} as any} />
         </TouchableOpacity>
         {showScopeDropdown && (
           <View style={styles.dropdownMenu}>
@@ -491,7 +491,7 @@ export default function ConsentFormScreen() {
               >
                 <Text style={styles.dropdownItemText}>{scope}</Text>
                 {scope === geographicScope && (
-                  <Check size={16} color="#3B82F6" />
+                  <Check size={16} {...{color: "#3B82F6"} as any} />
                 )}
               </TouchableOpacity>
             ))}
@@ -516,7 +516,7 @@ export default function ConsentFormScreen() {
           >
             {timeDuration || '期間を選択'}
           </Text>
-          <Calendar size={20} color="#64748B" />
+          <Calendar size={20} {...{color: "#64748B"} as any} />
         </TouchableOpacity>
         {showDurationDropdown && (
           <View style={styles.dropdownMenu}>
@@ -528,7 +528,7 @@ export default function ConsentFormScreen() {
               >
                 <Text style={styles.dropdownItemText}>{duration}</Text>
                 {duration === timeDuration && (
-                  <Check size={16} color="#3B82F6" />
+                  <Check size={16} {...{color: "#3B82F6"} as any} />
                 )}
               </TouchableOpacity>
             ))}
@@ -560,7 +560,7 @@ export default function ConsentFormScreen() {
               ]}
             >
               {selectedModifications.some((item) => item.id === modification) && (
-                <Check size={12} color="#FFFFFF" />
+                <Check size={12} {...{color: "#FFFFFF"} as any} />
               )}
             </View>
             <Text style={styles.checkboxLabel}>{modification}</Text>
@@ -583,7 +583,7 @@ export default function ConsentFormScreen() {
               ]}
             >
               {selectedChannels.some((item) => item.id === channel) && (
-                <Check size={12} color="#FFFFFF" />
+                <Check size={12} {...{color: "#FFFFFF"} as any} />
               )}
             </View>
             <Text style={styles.checkboxLabel}>{channel}</Text>
@@ -633,7 +633,7 @@ export default function ConsentFormScreen() {
               termsAccepted && styles.checkboxChecked,
             ]}
           >
-            {termsAccepted && <Check size={12} color="#FFFFFF" />}
+            {termsAccepted && <Check size={12} {...{color: "#FFFFFF"} as any} />}
           </View>
           <Text style={styles.agreementText}>
             このフォームと完全なポリシー文書に概説されている画像使用許可に関する利用規約に同意します。
@@ -650,7 +650,7 @@ export default function ConsentFormScreen() {
               dataProtectionAccepted && styles.checkboxChecked,
             ]}
           >
-            {dataProtectionAccepted && <Check size={12} color="#FFFFFF" />}
+            {dataProtectionAccepted && <Check size={12} {...{color: "#FFFFFF"} as any} />}
           </View>
           <Text style={styles.agreementText}>
             プライバシーポリシーとデータ保護規制に従って個人情報が処理されることを理解しています。
@@ -667,7 +667,7 @@ export default function ConsentFormScreen() {
               revocationUnderstood && styles.checkboxChecked,
             ]}
           >
-            {revocationUnderstood && <Check size={12} color="#FFFFFF" />}
+            {revocationUnderstood && <Check size={12} {...{color: "#FFFFFF"} as any} />}
           </View>
           <Text style={styles.agreementText}>
             ポリシーに概説されている制限に従って、正式な取り消し要求を提出することでいつでもこの同意を取り消すことができることを理解しています。
@@ -676,7 +676,7 @@ export default function ConsentFormScreen() {
       </View>
 
       <View style={styles.infoBox}>
-        <Info size={20} color="#1E40AF" style={styles.infoIcon} />
+        <Info size={20} {...{color: "#1E40AF"} as any} style={styles.infoIcon} />
         <Text style={styles.infoText}>
           このフォームを送信することで、指定された画像使用に対して法的拘束力のある同意を提供することになります。この同意書のコピーはすべての関係者にメールで送信されます。
         </Text>
@@ -688,7 +688,7 @@ export default function ConsentFormScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-          <ArrowLeft size={20} color="#0F172A" />
+          <ArrowLeft size={20} {...{color: "#0F172A"} as any} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>画像同意書フォーム</Text>
         <View style={styles.placeholder} />

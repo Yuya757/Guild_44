@@ -1,0 +1,14 @@
+node_modules
+.expo
+.expo-shared
+dist
+npm-debug.log
+*.log
+.env
+.env.*
+.git
+.github
+.vscode
+android/build
+android/app/build
+ios/build 

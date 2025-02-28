@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, TextInput, Alert, Share } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import { ArrowLeft, Calendar, Clock, Download, Share2, MessageCircle, TriangleAlert as AlertTriangle } from 'lucide-react-native';
@@ -17,6 +17,8 @@ interface BaseRequest {
   usagePurpose: string;
   usageDescription: string;
   usageDuration: string;
+  deadline: string;
+  isMyRequest: boolean;
 }
 
 interface ApprovedRequest extends BaseRequest {
@@ -42,61 +44,91 @@ const MOCK_REQUESTS: Record<string, Request> = {
   '1': {
     id: '1',
     image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&auto=format&q=80',
-    title: '社員プロフィール写真',
+    title: '友達との旅行写真',
     owner: '田中 花子',
     ownerEmail: 'hanako.tanaka@example.com',
     status: 'approved',
-    date: '2023-10-15',
-    projectName: '夏季マーケティングキャンペーン',
-    usagePurpose: 'ウェブサイト',
-    usageDescription: 'この画像は、新しいアウトドアアドベンチャーパッケージを宣伝するために、ウェブサイトのホームページのヒーローバナーとして使用されます。',
-    usageDuration: '6ヶ月',
-    approvalDate: '2023-10-18',
-    notes: 'ウェブサイトのフッターに写真家のクレジットを記載してください。',
+    date: '2025-06-15',
+    projectName: '個人アルバム',
+    usagePurpose: 'SNS投稿',
+    usageDescription: 'この写真を友達と一緒にInstagramに投稿したいです。',
+    usageDuration: '無期限',
+    approvalDate: '2025-06-18',
+    notes: 'ありがとう！大切な思い出の写真です。',
+    deadline: '2025-07-15',
+    isMyRequest: false,
   },
   '2': {
     id: '2',
     image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&q=80',
-    title: 'マーケティング素材',
+    title: '誕生日パーティー',
     owner: '佐藤 太郎',
     ownerEmail: 'taro.sato@example.com',
     status: 'pending',
-    date: '2023-10-18',
-    projectName: 'アーバンリビングブログ',
-    usagePurpose: 'ブログ記事',
-    usageDescription: 'この画像は、都市建築と都市計画に関するブログ記事のイラストとして使用されます。',
-    usageDuration: '1年',
+    date: '2025-06-18',
+    projectName: '誕生日の記念',
+    usagePurpose: 'SNS投稿',
+    usageDescription: '友達の誕生日パーティーの様子をSNSで共有したいです。',
+    usageDuration: '無期限',
+    deadline: '2025-07-18',
+    isMyRequest: false,
   },
   '3': {
     id: '3',
     image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&auto=format&q=80',
-    title: 'イベント写真',
+    title: '同窓会グループ写真',
     owner: '鈴木 一郎',
     ownerEmail: 'ichiro.suzuki@example.com',
     status: 'denied',
-    date: '2023-10-10',
-    projectName: '旅行パンフレット',
-    usagePurpose: '印刷物',
-    usageDescription: 'この画像は、ビーチリゾートを紹介する旅行パンフレットに使用される予定でした。',
-    usageDuration: '3ヶ月',
-    denialReason: 'この画像は既に別の会社に独占的にライセンスされています。',
-    denialDate: '2023-10-12',
+    date: '2025-06-10',
+    projectName: '同窓会記念',
+    usagePurpose: 'SNS投稿',
+    usageDescription: '同窓会で撮影したグループ写真をSNSで共有したかったです。',
+    usageDuration: '無期限',
+    denialReason: 'すみませんが、この写真は他の参加者からの許可が得られていないため、共有できません。',
+    denialDate: '2025-06-12',
+    deadline: '2025-07-10',
+    isMyRequest: true,
+  },
+  '4': {
+    id: '4',
+    image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&auto=format&q=80',
+    title: '家族写真',
+    owner: '山田 優子',
+    ownerEmail: 'yuko.yamada@example.com',
+    status: 'approved',
+    date: '2025-06-05',
+    projectName: '家族アルバム',
+    usagePurpose: '個人利用',
+    usageDescription: '家族の記念写真として保存し、共有したいです。',
+    usageDuration: '無期限',
+    approvalDate: '2025-06-08',
+    notes: '素敵な家族写真をありがとう！',
+    deadline: '2025-07-05',
+    isMyRequest: true,
   },
 };
 
 export default function RequestDetailsScreen() {
   const { id } = useLocalSearchParams();
   const [message, setMessage] = useState('');
+  const [localRequest, setLocalRequest] = useState<Request | null>(null);
   
   // IDに基づいてリクエストの詳細を取得
-  const request = MOCK_REQUESTS[id as keyof typeof MOCK_REQUESTS];
+  const requestFromMock = MOCK_REQUESTS[id as keyof typeof MOCK_REQUESTS];
   
-  if (!request) {
+  // localRequestが初期化されていない場合は、モックデータから設定
+  if (!localRequest && requestFromMock) {
+    setLocalRequest(requestFromMock);
+  }
+  
+  // localRequestが存在しない場合は、モックデータも存在しないため、「見つかりません」を表示
+  if (!localRequest) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <ArrowLeft size={20} color="#0F172A" />
+            <ArrowLeft size={20} {...{color: "#0F172A"} as any} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>申請詳細</Text>
           <View style={styles.placeholder} />
@@ -174,22 +206,102 @@ export default function RequestDetailsScreen() {
     );
   };
 
+  // 共有機能
+  const handleShare = async () => {
+    try {
+      await Share.share({
+        message: `申請詳細: ${localRequest.title} - ${localRequest.owner}からの申請です。`,
+      });
+    } catch (error) {
+      Alert.alert('共有エラー', '共有中にエラーが発生しました。');
+    }
+  };
+
+  // 期限切れかどうかをチェック
+  const isDeadlinePassed = () => {
+    const today = new Date();
+    const deadline = new Date(localRequest.deadline);
+    return today > deadline;
+  };
+
+  // ステータス変更が可能かどうか
+  const canChangeStatus = () => {
+    return !isDeadlinePassed() && localRequest.status !== 'approved';
+  };
+
+  // ステータスを変更する
+  const handleChangeStatus = (newStatus: 'approved' | 'denied') => {
+    if (!canChangeStatus()) {
+      Alert.alert(
+        'ステータス変更不可',
+        '期限が過ぎているため、ステータスを変更できません。',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    // 確認ダイアログを表示
+    Alert.alert(
+      'ステータス変更',
+      `申請を${newStatus === 'approved' ? '承認' : '却下'}しますか？`,
+      [
+        {
+          text: 'キャンセル',
+          style: 'cancel'
+        },
+        {
+          text: '変更する',
+          onPress: () => {
+            // ステータスに応じて必要なプロパティを追加
+            const today = new Date().toISOString().split('T')[0];
+            let updatedRequest: Request;
+            
+            if (newStatus === 'approved') {
+              updatedRequest = {
+                ...localRequest,
+                status: 'approved',
+                approvalDate: today,
+                notes: ''
+              } as ApprovedRequest;
+            } else {
+              updatedRequest = {
+                ...localRequest,
+                status: 'denied',
+                denialDate: today,
+                denialReason: '申請が却下されました。'
+              } as DeniedRequest;
+            }
+            
+            setLocalRequest(updatedRequest);
+            
+            Alert.alert(
+              'ステータス変更完了',
+              `申請を${newStatus === 'approved' ? '承認' : '却下'}しました。`,
+              [{ text: 'OK' }]
+            );
+          }
+        }
+      ]
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <ArrowLeft size={20} color="#0F172A" />
+          <ArrowLeft size={20} {...{color: "#0F172A"} as any} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>申請詳細</Text>
-        <TouchableOpacity style={styles.shareButton}>
-          <Share2 size={20} color="#64748B" />
+        <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
+          <Share2 size={20} {...{color: "#FFFFFF"} as any} />
+          <Text style={styles.shareButtonText}>共有</Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.imageContainer}>
           <Image
-            source={{ uri: request.image }}
+            source={{ uri: localRequest.image }}
             style={styles.image}
             resizeMode="cover"
           />
@@ -197,64 +309,97 @@ export default function RequestDetailsScreen() {
             style={styles.reportButton}
             onPress={handleReportImage}
           >
-            <AlertTriangle size={20} color="#FFFFFF" />
+            <AlertTriangle size={20} {...{color: "#FFFFFF"} as any} />
+          </TouchableOpacity>
+          
+          {/* 写真編集ボタン */}
+          <TouchableOpacity 
+            style={styles.editPhotoButton}
+            onPress={() => router.push({
+              pathname: '/photo-editor',
+              params: { imageUri: localRequest.image }
+            })}
+          >
+            <Text style={styles.editPhotoButtonText}>顔を隠す</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.detailsContainer}>
           <View style={styles.titleRow}>
-            <Text style={styles.title}>{request.title}</Text>
+            <Text style={styles.title}>{localRequest.title}</Text>
             <View
               style={[
                 styles.statusBadge,
-                { backgroundColor: getStatusColor(request.status) + '20' },
+                { backgroundColor: getStatusColor(localRequest.status) + '20' },
               ]}
             >
               <View
                 style={[
                   styles.statusDot,
-                  { backgroundColor: getStatusColor(request.status) },
+                  { backgroundColor: getStatusColor(localRequest.status) },
                 ]}
               />
               <Text
                 style={[
                   styles.statusText,
-                  { color: getStatusColor(request.status) },
+                  { color: getStatusColor(localRequest.status) },
                 ]}
               >
-                {getStatusText(request.status)}
+                {getStatusText(localRequest.status)}
               </Text>
             </View>
           </View>
 
           <View style={styles.infoRow}>
             <View style={styles.infoItem}>
-              <Calendar size={16} color="#64748B" />
-              <Text style={styles.infoText}>申請日: {request.date}</Text>
+              <Calendar size={16} {...{color: "#64748B"} as any} />
+              <Text style={styles.infoText}>申請日: {localRequest.date}</Text>
             </View>
-            {request.status === 'approved' && (
+            {localRequest.status === 'approved' && (
               <View style={styles.infoItem}>
-                <Clock size={16} color="#64748B" />
-                <Text style={styles.infoText}>承認日: {(request as ApprovedRequest).approvalDate}</Text>
+                <Clock size={16} {...{color: "#64748B"} as any} />
+                <Text style={styles.infoText}>承認日: {(localRequest as ApprovedRequest).approvalDate}</Text>
               </View>
             )}
-            {request.status === 'denied' && (
+            {localRequest.status === 'denied' && (
               <View style={styles.infoItem}>
-                <Clock size={16} color="#64748B" />
-                <Text style={styles.infoText}>却下日: {(request as DeniedRequest).denialDate}</Text>
+                <Clock size={16} {...{color: "#64748B"} as any} />
+                <Text style={styles.infoText}>却下日: {(localRequest as DeniedRequest).denialDate}</Text>
               </View>
             )}
+            <View style={styles.infoItem}>
+              <Calendar size={16} {...{color: "#64748B"} as any} />
+              <Text style={styles.infoText}>期限: {localRequest.deadline}</Text>
+            </View>
           </View>
+
+          {/* ステータス変更ボタン（期限内のみ表示） */}
+          {canChangeStatus() && !localRequest.isMyRequest && (
+            <View style={styles.actionButtonsContainer}>
+              <TouchableOpacity
+                style={[styles.actionButton, styles.approveButton]}
+                onPress={() => handleChangeStatus('approved')}
+              >
+                <Text style={styles.actionButtonText}>承認する</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionButton, styles.denyButton]}
+                onPress={() => handleChangeStatus('denied')}
+              >
+                <Text style={styles.actionButtonText}>却下する</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>所有者情報</Text>
             <View style={styles.sectionContent}>
               <Text style={styles.sectionItemTitle}>名前</Text>
-              <Text style={styles.sectionItemText}>{request.owner}</Text>
+              <Text style={styles.sectionItemText}>{localRequest.owner}</Text>
             </View>
             <View style={styles.sectionContent}>
               <Text style={styles.sectionItemTitle}>メールアドレス</Text>
-              <Text style={styles.sectionItemText}>{request.ownerEmail}</Text>
+              <Text style={styles.sectionItemText}>{localRequest.ownerEmail}</Text>
             </View>
           </View>
 
@@ -262,40 +407,40 @@ export default function RequestDetailsScreen() {
             <Text style={styles.sectionTitle}>使用詳細</Text>
             <View style={styles.sectionContent}>
               <Text style={styles.sectionItemTitle}>プロジェクト/キャンペーン</Text>
-              <Text style={styles.sectionItemText}>{request.projectName}</Text>
+              <Text style={styles.sectionItemText}>{localRequest.projectName}</Text>
             </View>
             <View style={styles.sectionContent}>
               <Text style={styles.sectionItemTitle}>使用目的 </Text>
-              <Text style={styles.sectionItemText}>{request.usagePurpose}</Text>
+              <Text style={styles.sectionItemText}>{localRequest.usagePurpose}</Text>
             </View>
             <View style={styles.sectionContent}>
               <Text style={styles.sectionItemTitle}>説明</Text>
-              <Text style={styles.sectionItemText}>{request.usageDescription}</Text>
+              <Text style={styles.sectionItemText}>{localRequest.usageDescription}</Text>
             </View>
             <View style={styles.sectionContent}>
               <Text style={styles.sectionItemTitle}>使用期間</Text>
-              <Text style={styles.sectionItemText}>{request.usageDuration}</Text>
+              <Text style={styles.sectionItemText}>{localRequest.usageDuration}</Text>
             </View>
           </View>
 
-          {request.status === 'approved' && (request as ApprovedRequest).notes && (
+          {localRequest.status === 'approved' && (localRequest as ApprovedRequest).notes && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>所有者からのメモ</Text> <View style={styles.notesContainer}>
-                <Text style={styles.notesText}>{(request as ApprovedRequest).notes}</Text>
+                <Text style={styles.notesText}>{(localRequest as ApprovedRequest).notes}</Text>
               </View>
             </View>
           )}
 
-          {request.status === 'denied' && (request as DeniedRequest).denialReason && (
+          {localRequest.status === 'denied' && (localRequest as DeniedRequest).denialReason && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>却下理由</Text>
               <View style={styles.notesContainer}>
-                <Text style={styles.notesText}>{(request as DeniedRequest).denialReason}</Text>
+                <Text style={styles.notesText}>{(localRequest as DeniedRequest).denialReason}</Text>
               </View>
             </View>
           )}
 
-          {request.status === 'pending' && (
+          {localRequest.status === 'pending' && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>メッセージを送信</Text>
               <View style={styles.messageInputContainer}>
@@ -310,20 +455,20 @@ export default function RequestDetailsScreen() {
                   onChangeText={setMessage}
                 />
                 <TouchableOpacity style={styles.sendButton}>
-                  <MessageCircle size={20} color="#FFFFFF" />
+                  <MessageCircle size={20} {...{color: "#FFFFFF"} as any} />
                 </TouchableOpacity>
               </View>
             </View>
           )}
 
-          {request.status === 'approved' && (
+          {localRequest.status === 'approved' && (
             <TouchableOpacity style={styles.downloadButton}>
-              <Download size={20} color="#FFFFFF" />
+              <Download size={20} {...{color: "#FFFFFF"} as any} />
               <Text style={styles.downloadButtonText}>画像をダウンロード</Text>
             </TouchableOpacity>
           )}
 
-          {request.status === 'denied' && (
+          {localRequest.status === 'denied' && (
             <TouchableOpacity
               style={styles.newRequestButton}
               onPress={() => router.push('/new-request')}
@@ -365,11 +510,13 @@ const styles = StyleSheet.create({
     color: '#0F172A',
   },
   shareButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
+    backgroundColor: '#3B82F6',
+    width: 70,
+    height: 36,
+    borderRadius: 18,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   placeholder: {
     width: 40,
@@ -514,13 +661,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#3B82F6',
     borderRadius: 12,
     paddingVertical: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#3B82F6',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
   },
   downloadButtonText: {
     fontSize: 16,
@@ -567,5 +707,52 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+    marginTop: 16,
+    gap: 12,
+  },
+  actionButton: {
+    flex: 1,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  approveButton: {
+    backgroundColor: '#10B981',
+  },
+  denyButton: {
+    backgroundColor: '#EF4444',
+  },
+  actionButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  editPhotoButton: {
+    position: 'absolute',
+    bottom: 16,
+    right: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  editPhotoButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  shareButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginLeft: 4,
   },
 });

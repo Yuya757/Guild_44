@@ -2,7 +2,12 @@ import { useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Switch, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ArrowLeft, Calendar, Clock, Instagram, Twitter, CreditCard as Edit, Trash2 } from 'lucide-react-native';
+import { ArrowLeft, Calendar, Clock, Instagram, Twitter, CreditCard as Edit, Trash2, Facebook, Snail as Snapchat } from 'lucide-react-native';
+import { formatScheduledDate } from '../utils/formatScheduledDate';
+import { getStatusStyles } from '../utils/getStatusStyles';
+import { getPlatformColor } from '../utils/getPlatformColor';
+import { FadeInRight } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 // Define types for scheduled posts
 interface ScheduledPost {
@@ -72,9 +77,16 @@ export default function ScheduledPostsScreen() {
   const getPlatformIcon = (platform: ScheduledPost['platform']) => {
     switch (platform) {
       case 'instagram':
-        return <Instagram size={20} color="#E1306C" />;
+        return <Instagram size={20} {...{color: "#E1306C"} as any} />;
       case 'twitter':
-        return <Twitter size={20} color="#1DA1F2" />;
+        return <Twitter size={20} {...{color: "#1DA1F2"} as any} />;
+      case 'snapchat':
+        return <Snapchat size={20} {...{color: "#FFFC00"} as any} />;
+      case 'facebook':
+        return <Facebook size={20} {...{color: "#1877F2"} as any} />;
+      case 'tiktok':
+        // TikTokのアイコンはLucideにないので、テキストで代用
+        return <Text style={{fontSize: 14, fontWeight: 'bold', color: '#000000'}}>TT</Text>;
       default:
         return null;
     }
@@ -86,6 +98,12 @@ export default function ScheduledPostsScreen() {
         return 'Instagram';
       case 'twitter':
         return 'Twitter';
+      case 'snapchat':
+        return 'Snapchat';
+      case 'facebook':
+        return 'Facebook';
+      case 'tiktok':
+        return 'TikTok';
       default:
         return platform;
     }
@@ -145,59 +163,73 @@ export default function ScheduledPostsScreen() {
     );
   };
 
-  const renderPostItem = ({ item }: { item: ScheduledPost }) => (
-    <View style={styles.postItem}>
-      <Image source={{ uri: item.image }} style={styles.postImage} />
-      
-      <View style={styles.postContent}>
-        <View style={styles.postHeader}>
-          <View style={styles.platformContainer}>
-            {getPlatformIcon(item.platform)}
-            <Text style={styles.platformText}>{getPlatformName(item.platform)}</Text>
+  const handlePostPress = (postId: string) => {
+    // 詳細画面に遷移
+    router.push(`/scheduled-post-details/${postId}`);
+  };
+
+  const renderPostItem = ({ item }: { item: ScheduledPost }) => {
+    const formattedDate = formatScheduledDate(item.scheduledDate, item.scheduledTime);
+    const { backgroundColor, statusText, statusColor } = getStatusStyles(item.status);
+
+    return (
+      <Animated.View 
+        entering={FadeInRight.delay(100 * parseInt(item.id))}
+        style={styles.postCard}
+      >
+        <TouchableOpacity 
+          style={styles.postItem}
+          onPress={() => handlePostPress(item.id)}
+        >
+          <Image source={{ uri: item.image }} style={styles.postImage} />
+          <View style={styles.postDetails}>
+            <View style={styles.postHeader}>
+              <Text style={styles.postTitle} numberOfLines={2}>{item.caption}</Text>
+              <View style={[styles.platformBadge, { backgroundColor: getPlatformColor(item.platform) + '20' }]}>
+                {getPlatformIcon(item.platform)}
+              </View>
+            </View>
+            
+            <View style={styles.postMetadata}>
+              <View style={styles.statusContainer}>
+                <View style={[styles.statusIndicator, { backgroundColor: statusColor }]} />
+                <Text style={[styles.statusText, { color: statusColor }]}>{statusText}</Text>
+              </View>
+              
+              <View style={styles.dateContainer}>
+                <Calendar size={14} {...{color: "#64748B"} as any} />
+                <Text style={styles.dateText}>{formattedDate.split(' ')[0]}</Text>
+                <Clock size={14} {...{color: "#64748B"} as any} style={styles.clockIcon} />
+                <Text style={styles.dateText}>{formattedDate.split(' ')[1]}</Text>
+              </View>
+            </View>
+            
+            <View style={styles.actionsContainer}>
+              <TouchableOpacity 
+                style={styles.actionButton}
+                onPress={() => handleEditPost(item)}
+              >
+                <Edit size={18} {...{color: "#3B82F6"} as any} />
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.actionButton, styles.deleteButton]}
+                onPress={() => handleDeletePost(item)}
+              >
+                <Trash2 size={18} {...{color: "#EF4444"} as any} />
+              </TouchableOpacity>
+            </View>
           </View>
-          
-          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + '20' }]}>
-            <View style={[styles.statusDot, { backgroundColor: getStatusColor(item.status) }]} />
-            <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
-              {getStatusText(item.status)}
-            </Text>
-          </View>
-        </View>
-        
-        <Text style={styles.postCaption} numberOfLines={2}>{item.caption}</Text>
-        
-        <View style={styles.postFooter}>
-          <View style={styles.scheduleInfo}>
-            <Calendar size={14} color="#64748B" />
-            <Text style={styles.scheduleText}>{item.scheduledDate}</Text>
-            <Clock size={14} color="#64748B" style={styles.clockIcon} />
-            <Text style={styles.scheduleText}>{item.scheduledTime}</Text>
-          </View>
-          
-          <View style={styles.actionButtons}>
-            <TouchableOpacity 
-              style={styles.actionButton}
-              onPress={() => handleEditPost(item)}
-            >
-              <Edit size={18} color="#3B82F6" />
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.actionButton, styles.deleteButton]}
-              onPress={() => handleDeletePost(item)}
-            >
-              <Trash2 size={18} color="#EF4444" />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    </View>
-  );
+        </TouchableOpacity>
+      </Animated.View>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <ArrowLeft size={20} color="#0F172A" />
+          <ArrowLeft size={20} {...{color: "#0F172A"} as any} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>予約投稿</Text>
         <View style={styles.placeholder} />
@@ -325,7 +357,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 100,
   },
-  postItem: {
+  postCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     marginBottom: 16,
@@ -336,12 +368,17 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
+  postItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   postImage: {
-    width: '100%',
-    height: 180,
+    width: 120,
+    height: 120,
     backgroundColor: '#E2E8F0',
   },
-  postContent: {
+  postDetails: {
+    flex: 1,
     padding: 16,
   },
   postHeader: {
@@ -350,24 +387,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  platformContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  platformText: {
+  postTitle: {
     fontSize: 14,
     fontWeight: '500',
     color: '#0F172A',
-    marginLeft: 6,
   },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  platformBadge: {
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
   },
-  statusDot: {
+  postMetadata: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statusIndicator: {
     width: 6,
     height: 6,
     borderRadius: 3,
@@ -377,23 +417,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
   },
-  postCaption: {
-    fontSize: 14,
-    fontWeight: '400',
-    color: '#334155',
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  postFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  scheduleInfo: {
+  dateContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  scheduleText: {
+  dateText: {
     fontSize: 12,
     fontWeight: '400',
     color: '#64748B',
@@ -402,8 +430,10 @@ const styles = StyleSheet.create({
   clockIcon: {
     marginLeft: 12,
   },
-  actionButtons: {
+  actionsContainer: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   actionButton: {
     width: 36,
