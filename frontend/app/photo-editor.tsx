@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,11 +10,16 @@ import {
   Alert,
   PanResponder,
   Animated,
+  ActivityIndicator,
+  TextInput,
+  FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
-import { ArrowLeft, Check, Image as ImageIcon, Trash2 } from 'lucide-react-native';
+import { ArrowLeft, Check, Image as ImageIcon, Trash2, Search, Zap, Mail } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
+import { recognizeFacesFromImage, getSuggestedEmails, getFaceCoordinates } from '../utils/apiService';
 
 const { width } = Dimensions.get('window');
 
@@ -34,17 +39,85 @@ interface Sticker {
   type: string;
 }
 
+interface FaceCoordinate {
+  faceId: string;
+  boundingBox: {
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+  }
+}
+
 export default function PhotoEditorScreen() {
   const { imageUri } = useLocalSearchParams<{ imageUri: string }>();
   const [selectedStickerType, setSelectedStickerType] = useState<string | null>(null);
   const [stickers, setStickers] = useState<Sticker[]>([]);
   const [selectedSticker, setSelectedSticker] = useState<number | null>(null);
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [suggestedEmails, setSuggestedEmails] = useState<string[]>([]);
+  const [faceCoordinates, setFaceCoordinates] = useState<FaceCoordinate[]>([]);
+  const [emailInput, setEmailInput] = useState('');
+  const [showEmailInput, setShowEmailInput] = useState(false);
+
+  // 画像が変更されたら顔認識を実行
+  useEffect(() => {
+    if (imageUri) {
+      detectFaces();
+    }
+  }, [imageUri]);
 
   // 画像サイズの取得（必要に応じて）
   const onImageLayout = (event: any) => {
     const { width, height } = event.nativeEvent.layout;
     setImageSize({ width, height });
+  };
+
+  // 顔認識と処理を実行
+  const detectFaces = async () => {
+    if (!imageUri) return;
+    
+    try {
+      setIsProcessing(true);
+      
+      // 画像をBase64に変換
+      const base64Image = await FileSystem.readAsStringAsync(imageUri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      
+      // 顔認識APIを呼び出し
+      const response = await recognizeFacesFromImage(`data:image/jpeg;base64,${base64Image}`);
+      
+      if (response.status === 'success' && response.faces.length > 0) {
+        // メールアドレスの提案を設定
+        const emails = getSuggestedEmails(response.faces);
+        setSuggestedEmails(emails);
+        
+        // 顔の座標を取得
+        const coordinates = getFaceCoordinates(response.faces);
+        setFaceCoordinates(coordinates);
+        
+        // 検出成功メッセージ
+        Alert.alert(
+          '顔認識成功',
+          `${response.faces.length}人の顔を検出しました。`
+        );
+      } else {
+        Alert.alert(
+          '顔認識結果',
+          '顔が検出されませんでした。別の画像を試してください。'
+        );
+      }
+    } catch (error) {
+      console.error('Face detection error:', error);
+      Alert.alert(
+        'エラー',
+        '顔認識処理中にエラーが発生しました。'
+      );
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   // スタンプを追加
@@ -60,6 +133,32 @@ export default function PhotoEditorScreen() {
     setStickers([...stickers, newSticker]);
     setSelectedSticker(stickers.length);
     setSelectedStickerType(null); // 選択状態をリセット
+  };
+
+  // 自動的に顔の位置にスタンプを配置
+  const placeStickersOnFaces = (type: string) => {
+    if (faceCoordinates.length === 0) {
+      Alert.alert('顔が検出されていません', '先に画像から顔を検出してください。');
+      return;
+    }
+    
+    // 各顔に対してスタンプを配置
+    const newStickers = faceCoordinates.map(face => {
+      // 顔の中心にスタンプを配置
+      const centerX = face.boundingBox.left * imageSize.width + (face.boundingBox.width * imageSize.width / 2) - 25;
+      const centerY = face.boundingBox.top * imageSize.height + (face.boundingBox.height * imageSize.height / 2) - 25;
+      
+      return {
+        id: `sticker-${Date.now()}-${face.faceId}`,
+        x: centerX,
+        y: centerY,
+        scale: face.boundingBox.width * 1.5, // スタンプのサイズを顔のサイズに合わせる
+        type,
+      };
+    });
+    
+    setStickers([...stickers, ...newStickers]);
+    setSelectedStickerType(null);
   };
 
   // スタンプを選択
@@ -159,6 +258,32 @@ export default function PhotoEditorScreen() {
     });
   };
 
+  // 顔の領域を示すボックスをレンダリング（デバッグ用）
+  const renderFaceBoxes = () => {
+    return faceCoordinates.map((face) => (
+      <View
+        key={face.faceId}
+        style={[
+          styles.faceBox,
+          {
+            left: face.boundingBox.left * imageSize.width,
+            top: face.boundingBox.top * imageSize.height,
+            width: face.boundingBox.width * imageSize.width,
+            height: face.boundingBox.height * imageSize.height,
+          },
+        ]}
+      />
+    ));
+  };
+
+  const addEmail = () => {
+    if (emailInput.trim() && !suggestedEmails.includes(emailInput)) {
+      setSuggestedEmails([...suggestedEmails, emailInput]);
+      setEmailInput('');
+      setShowEmailInput(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -180,35 +305,119 @@ export default function PhotoEditorScreen() {
       <View style={styles.mainContent}>
         <View style={styles.imageContainer} onLayout={onImageLayout}>
           {imageUri ? (
-            <Image
-              source={{ uri: imageUri }}
-              style={styles.image}
-              resizeMode="contain"
-            />
+            <>
+              <Image
+                source={{ uri: imageUri }}
+                style={styles.image}
+                resizeMode="contain"
+              />
+              {isProcessing && (
+                <View style={styles.processingOverlay}>
+                  <ActivityIndicator size="large" color="#10B981" />
+                  <Text style={styles.processingText}>顔を認識中...</Text>
+                </View>
+              )}
+              {/* 顔のボックスとスタンプのレンダリング */}
+              {renderFaceBoxes()}
+              {renderStickers()}
+            </>
           ) : (
             <View style={styles.noImageContainer}>
               <ImageIcon size={48} {...{color: "#94A3B8"} as any} />
               <Text style={styles.noImageText}>画像が見つかりません</Text>
               <TouchableOpacity 
                 style={styles.selectImageButton}
-                onPress={() => router.back()}
+                onPress={pickImage}
               >
-                <Text style={styles.selectImageButtonText}>戻る</Text>
+                <Text style={styles.selectImageButtonText}>画像を選択</Text>
               </TouchableOpacity>
             </View>
           )}
-          
-          {/* スタンプのレンダリング */}
-          {renderStickers()}
         </View>
 
-        {selectedSticker !== null && (
-          <TouchableOpacity style={styles.removeButton} onPress={removeSelectedSticker}>
-            <Trash2 size={24} {...{color: "#EF4444"} as any} />
-            <Text style={styles.removeButtonText}>削除</Text>
-          </TouchableOpacity>
+        {/* メールアドレス提案セクション */}
+        {imageUri && suggestedEmails.length > 0 && (
+          <View style={styles.emailSuggestionContainer}>
+            <View style={styles.sectionTitleRow}>
+              <Mail size={16} {...{color: "#0F172A"} as any} />
+              <Text style={styles.sectionTitle}>メールアドレス候補</Text>
+            </View>
+            <FlatList
+              data={suggestedEmails}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={(item, index) => `email-${index}`}
+              renderItem={({ item }) => (
+                <TouchableOpacity style={styles.emailChip}>
+                  <Text style={styles.emailChipText}>{item}</Text>
+                </TouchableOpacity>
+              )}
+              ListFooterComponent={
+                <TouchableOpacity 
+                  style={styles.addEmailButton}
+                  onPress={() => setShowEmailInput(true)}
+                >
+                  <Text style={styles.addEmailButtonText}>+ 追加</Text>
+                </TouchableOpacity>
+              }
+            />
+            {showEmailInput && (
+              <View style={styles.emailInputContainer}>
+                <TextInput
+                  style={styles.emailInput}
+                  value={emailInput}
+                  onChangeText={setEmailInput}
+                  placeholder="メールアドレスを入力"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+                <TouchableOpacity 
+                  style={styles.emailAddButton}
+                  onPress={addEmail}
+                >
+                  <Text style={styles.emailAddButtonText}>追加</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
         )}
 
+        {/* 操作ボタンセクション */}
+        <View style={styles.actionButtonsContainer}>
+          {imageUri && !isProcessing && (
+            <>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={detectFaces}
+              >
+                <Search size={20} {...{color: "#FFFFFF"} as any} />
+                <Text style={styles.actionButtonText}>顔を検出</Text>
+              </TouchableOpacity>
+              
+              {selectedSticker !== null && (
+                <TouchableOpacity 
+                  style={[styles.actionButton, styles.removeButton]} 
+                  onPress={removeSelectedSticker}
+                >
+                  <Trash2 size={20} {...{color: "#FFFFFF"} as any} />
+                  <Text style={styles.actionButtonText}>削除</Text>
+                </TouchableOpacity>
+              )}
+              
+              {faceCoordinates.length > 0 && (
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.autoPlaceButton]}
+                  onPress={() => placeStickersOnFaces('blur')}
+                >
+                  <Zap size={20} {...{color: "#FFFFFF"} as any} />
+                  <Text style={styles.actionButtonText}>自動配置</Text>
+                </TouchableOpacity>
+              )}
+            </>
+          )}
+        </View>
+
+        {/* スタンプ選択セクション */}
         <View style={styles.stickerSelector}>
           <Text style={styles.sectionTitle}>スタンプを選択</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.stickersScrollView}>
@@ -267,9 +476,9 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     width: '100%',
-    height: width,
-    backgroundColor: '#E2E8F0',
+    height: 400,
     borderRadius: 12,
+    backgroundColor: '#E2E8F0',
     overflow: 'hidden',
     position: 'relative',
   },
@@ -286,27 +495,65 @@ const styles = StyleSheet.create({
   noImageText: {
     marginTop: 16,
     fontSize: 16,
-    fontWeight: '500',
     color: '#64748B',
   },
   selectImageButton: {
-    padding: 12,
+    marginTop: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
     backgroundColor: '#3B82F6',
     borderRadius: 8,
   },
   selectImageButtonText: {
-    fontSize: 16,
-    fontWeight: '500',
     color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  stickerSelector: {
+    marginTop: 16,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0F172A',
+    marginBottom: 8,
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  stickersScrollView: {
+    flexDirection: 'row',
+    marginBottom: 8,
+  },
+  stickerOption: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  selectedStickerOption: {
+    borderWidth: 3,
+    borderColor: '#3B82F6',
+  },
+  stickerOptionText: {
+    fontSize: 24,
+  },
+  instructionText: {
+    fontSize: 14,
+    color: '#64748B',
+    marginTop: 8,
   },
   sticker: {
     position: 'absolute',
     width: 50,
     height: 50,
-    borderColor: '#3B82F6',
-    borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
+    borderColor: '#3B82F6',
+    borderRadius: 25,
   },
   stickerContent: {
     width: '100%',
@@ -319,53 +566,107 @@ const styles = StyleSheet.create({
     fontSize: 24,
   },
   removeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 16,
-    padding: 12,
-    backgroundColor: '#FEE2E2',
-    borderRadius: 12,
+    backgroundColor: '#EF4444',
   },
   removeButtonText: {
-    marginLeft: 8,
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#EF4444',
+    color: '#FFFFFF',
+    marginLeft: 4,
   },
-  stickerSelector: {
-    marginTop: 24,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#0F172A',
-    marginBottom: 12,
-  },
-  stickersScrollView: {
-    marginBottom: 16,
-  },
-  stickerOption: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    marginRight: 16,
+  processingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
   },
-  selectedStickerOption: {
-    borderColor: '#3B82F6',
+  processingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: '#0F172A',
+  },
+  faceBox: {
+    position: 'absolute',
     borderWidth: 2,
+    borderColor: '#10B981',
+    borderRadius: 4,
   },
-  stickerOptionText: {
-    fontSize: 30,
+  emailSuggestionContainer: {
+    marginTop: 16,
+    padding: 12,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 8,
   },
-  instructionText: {
+  emailChip: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+  },
+  emailChipText: {
     fontSize: 14,
-    fontWeight: '400',
+    color: '#0F172A',
+  },
+  addEmailButton: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderStyle: 'dashed',
+  },
+  addEmailButtonText: {
+    fontSize: 14,
     color: '#64748B',
-    lineHeight: 20,
+  },
+  emailInputContainer: {
+    flexDirection: 'row',
+    marginTop: 8,
+  },
+  emailInput: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+  },
+  emailAddButton: {
+    marginLeft: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: '#3B82F6',
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emailAddButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    marginTop: 16,
+    justifyContent: 'center',
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: '#3B82F6',
+    borderRadius: 8,
+    marginHorizontal: 8,
+  },
+  actionButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  autoPlaceButton: {
+    backgroundColor: '#10B981',
   },
 }); 
