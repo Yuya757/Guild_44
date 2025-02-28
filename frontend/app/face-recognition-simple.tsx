@@ -8,6 +8,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -22,8 +23,50 @@ import {
 } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
+import * as ImageManipulator from 'expo-image-manipulator';
 import { recognizeFacesFromImage, getSuggestedEmails, getFaceCoordinates } from '../utils/apiService';
 import { Asset } from 'expo-asset';
+
+// テスト用のモックレスポンス
+const MOCK_SUCCESS_RESPONSE = {
+  status: 'success',
+  message: 'Face(s) recognized successfully',
+  timestamp: new Date().toISOString(),
+  faces: [
+    {
+      face_id: 'mock-face-1',
+      similarity: 98.5,
+      member_info: {
+        FaceId: 'mock-face-1',
+        Email: 'test.user1@example.com',
+        Name: 'Test User 1',
+        Department: 'Engineering',
+        BoundingBox: {
+          Width: 0.2,
+          Height: 0.3,
+          Left: 0.4,
+          Top: 0.2
+        }
+      }
+    },
+    {
+      face_id: 'mock-face-2',
+      similarity: 95.2,
+      member_info: {
+        FaceId: 'mock-face-2',
+        Email: 'test.user2@example.com',
+        Name: 'Test User 2',
+        Department: 'Marketing',
+        BoundingBox: {
+          Width: 0.2,
+          Height: 0.3,
+          Left: 0.7,
+          Top: 0.2
+        }
+      }
+    }
+  ]
+};
 
 // 画像のMIMEタイプを取得する関数
 const getMimeType = async (uri: string) => {
@@ -51,6 +94,9 @@ export default function FaceRecognitionSimpleScreen() {
   const [suggestedEmails, setSuggestedEmails] = useState<string[]>([]);
   const [faceCoordinates, setFaceCoordinates] = useState<any[]>([]);
   const [detectionsVisible, setDetectionsVisible] = useState(true);
+  const [useMockData, setUseMockData] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<string>('');
+  const [apiDebugMode, setApiDebugMode] = useState(false);
   
   // 写真を選択
   const pickImage = async () => {
@@ -102,7 +148,7 @@ export default function FaceRecognitionSimpleScreen() {
       setIsProcessing(true);
       
       // テスト画像のパスを指定（JPEGフォーマットを使用）
-      const asset = Asset.fromModule(require('../assets/test-image.jpg'));
+      const asset = Asset.fromModule(require('../assets/images/test-image.jpeg'));
       await asset.downloadAsync();
       
       if (asset.localUri) {
@@ -120,9 +166,26 @@ export default function FaceRecognitionSimpleScreen() {
       console.error('Test image error:', error);
       Alert.alert(
         'エラー',
-        'テスト画像の読み込みに失敗しました。以下を確認してください：\n\n1. assets/test-image.jpgが存在すること\n2. 画像形式がJPEGであること'
+        'テスト画像の読み込みに失敗しました。以下を確認してください：\n\n1. assets/images/test-image.jpegが存在すること\n2. 画像形式がJPEGであること'
       );
       setIsProcessing(false);
+    }
+  };
+
+  // 画像を処理して最適化する関数
+  const optimizeImage = async (uri: string) => {
+    try {
+      // 画像をリサイズして品質を下げる
+      const manipResult = await ImageManipulator.manipulateAsync(
+        uri,
+        [{ resize: { width: 800 } }], // 幅800pxにリサイズ（高さは自動計算）
+        { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG } // 70%品質のJPEG
+      );
+      
+      return manipResult.uri;
+    } catch (error) {
+      console.error('Image optimization error:', error);
+      return uri; // 最適化に失敗した場合は元の画像を返す
     }
   };
 
@@ -135,17 +198,43 @@ export default function FaceRecognitionSimpleScreen() {
     
     try {
       setIsProcessing(true);
+      setDebugInfo('');
       
-      // MIMEタイプを取得
-      const mimeType = await getMimeType(uri);
+      let response;
       
-      // 画像をBase64に変換
-      const base64Image = await FileSystem.readAsStringAsync(uri, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
+      if (useMockData) {
+        // モックデータを使用
+        await new Promise(resolve => setTimeout(resolve, 1500)); // 処理時間をシミュレート
+        response = MOCK_SUCCESS_RESPONSE;
+      } else {
+        // 実際のAPI呼び出し
+        // 画像を最適化
+        const optimizedUri = await optimizeImage(uri);
+        
+        // MIMEタイプを取得
+        const mimeType = await getMimeType(optimizedUri);
+        
+        // 画像をBase64に変換
+        const base64Image = await FileSystem.readAsStringAsync(optimizedUri, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        
+        // デバッグ情報を追加
+        const imageSizeKB = (base64Image.length * 0.75 / 1024).toFixed(2);
+        setDebugInfo(`画像サイズ: ${imageSizeKB} KB\nMIMEタイプ: ${mimeType}`);
+        
+        if (apiDebugMode) {
+          // APIデバッグモードの場合、Base64データの一部を表示
+          const base64Prefix = base64Image.substring(0, 50);
+          const base64Suffix = base64Image.substring(base64Image.length - 20);
+          setDebugInfo(prev => `${prev}\n\nBase64プレフィックス: ${base64Prefix}...\nBase64サフィックス: ...${base64Suffix}`);
+        }
+        
+        // 顔認識APIを呼び出し
+        const dataToSend = `data:${mimeType};base64,${base64Image}`;
+        response = await recognizeFacesFromImage(dataToSend);
+      }
       
-      // 顔認識APIを呼び出し
-      const response = await recognizeFacesFromImage(`data:${mimeType};base64,${base64Image}`);
       setRecognitionResult(response);
       
       if (response.status === 'success' && response.faces.length > 0) {
@@ -156,13 +245,42 @@ export default function FaceRecognitionSimpleScreen() {
         // 顔の座標を取得
         const coordinates = getFaceCoordinates(response.faces);
         setFaceCoordinates(coordinates);
+      } else if (!useMockData) {
+        // APIで顔が検出されなかった場合、ユーザーに通知
+        Alert.alert(
+          '顔が検出されませんでした',
+          '画像に顔が写っていないか、検出できない状態です。別の画像を試すか、モックデータを使用してテストしてください。',
+          [
+            { text: 'キャンセル', style: 'cancel' },
+            {
+              text: 'モックデータを使用',
+              onPress: () => {
+                setUseMockData(true);
+                processImage(uri);
+              }
+            }
+          ]
+        );
       }
       
     } catch (error) {
       console.error('Face recognition error:', error);
+      // エラー内容をデバッグ情報に追加
+      setDebugInfo(prev => prev + `\n\nエラー詳細: ${error instanceof Error ? error.message : String(error)}`);
+      
       Alert.alert(
         'エラー',
-        '顔認識処理中にエラーが発生しました。再度お試しください。'
+        '顔認識処理中にエラーが発生しました。モックデータを使用しますか？',
+        [
+          { text: 'キャンセル', style: 'cancel' },
+          {
+            text: 'モックデータを使用',
+            onPress: () => {
+              setUseMockData(true);
+              processImage(uri);
+            }
+          }
+        ]
       );
     } finally {
       setIsProcessing(false);
@@ -211,6 +329,28 @@ export default function FaceRecognitionSimpleScreen() {
             2. 自動的に顔認識を行います{'\n'}
             3. 検出された顔とメールアドレスが表示されます
           </Text>
+          
+          <View style={styles.optionsContainer}>
+            <View style={styles.optionRow}>
+              <Text style={styles.mockDataText}>モックデータを使用:</Text>
+              <Switch
+                value={useMockData}
+                onValueChange={setUseMockData}
+                trackColor={{ false: '#CBD5E1', true: '#A7F3D0' }}
+                thumbColor={useMockData ? '#10B981' : '#F1F5F9'}
+              />
+            </View>
+            
+            <View style={styles.optionRow}>
+              <Text style={styles.mockDataText}>APIデバッグモード:</Text>
+              <Switch
+                value={apiDebugMode}
+                onValueChange={setApiDebugMode}
+                trackColor={{ false: '#CBD5E1', true: '#BFDBFE' }}
+                thumbColor={apiDebugMode ? '#3B82F6' : '#F1F5F9'}
+              />
+            </View>
+          </View>
         </View>
         
         <View style={styles.imageSection}>
@@ -263,7 +403,7 @@ export default function FaceRecognitionSimpleScreen() {
                 onPress={useTestImage}
               >
                 <Beaker size={32} {...{color: "#10B981"} as any} />
-                <Text style={[styles.uploadOptionText, {color: "#10B981"}]}>テスト画像を使用（JPG）</Text>
+                <Text style={[styles.uploadOptionText, {color: "#10B981"}]}>テスト画像を使用（JPEG）</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -275,6 +415,7 @@ export default function FaceRecognitionSimpleScreen() {
               <Check size={24} {...{color: "#10B981"} as any} />
               <Text style={styles.resultTitle}>
                 {faceCoordinates.length}人の顔を検出しました
+                {useMockData && <Text style={{ fontSize: 12, fontWeight: '500', color: '#64748B', fontStyle: 'italic' }}>（モック）</Text>}
               </Text>
             </View>
             
@@ -311,7 +452,8 @@ export default function FaceRecognitionSimpleScreen() {
                     `検出顔数: ${faceCoordinates.length}\n` +
                     `メールアドレス: ${suggestedEmails.length > 0 ? suggestedEmails.join(', ') : 'なし'}\n` +
                     `ステータス: ${recognitionResult.status}\n` +
-                    `メッセージ: ${recognitionResult.message}`
+                    `メッセージ: ${recognitionResult.message}` +
+                    (useMockData ? '\n\n※注意: これはモックデータです' : '')
                   )
                 }
               >
@@ -332,8 +474,90 @@ export default function FaceRecognitionSimpleScreen() {
             <Text style={styles.errorResultText}>
               別の写真で試してみてください。顔がはっきり映っている写真が最適です。
             </Text>
+            <TouchableOpacity
+              style={styles.mockDataButton}
+              onPress={() => {
+                setUseMockData(true);
+                if (imageUri) {
+                  processImage(imageUri);
+                }
+              }}
+            >
+              <Text style={styles.mockDataButtonText}>モックデータでテスト</Text>
+            </TouchableOpacity>
           </View>
         )}
+        
+        {/* APIトラブルシューティングセクション */}
+        {!useMockData && (
+          <View style={styles.troubleshootingSection}>
+            <Text style={styles.troubleshootingTitle}>APIエラー対策</Text>
+            <Text style={styles.troubleshootingText}>
+              400エラーが発生した場合、以下の対策を試してください:
+            </Text>
+            
+            <View style={styles.tipContainer}>
+              <Text style={styles.tipTitle}>1. 画像サイズを縮小</Text>
+              <TouchableOpacity
+                style={styles.troubleshootingButton}
+                onPress={async () => {
+                  if (!imageUri) return;
+                  const optimizedUri = await ImageManipulator.manipulateAsync(
+                    imageUri,
+                    [{ resize: { width: 500 } }],
+                    { compress: 0.5, format: ImageManipulator.SaveFormat.JPEG }
+                  );
+                  setImageUri(optimizedUri.uri);
+                  Alert.alert('画像を縮小しました', '画像サイズを縮小しました。再度テストしてください。');
+                }}
+              >
+                <Text style={styles.troubleshootingButtonText}>画像を縮小して再試行</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.tipContainer}>
+              <Text style={styles.tipTitle}>2. フォーマットをJPEGに変換</Text>
+              <TouchableOpacity
+                style={styles.troubleshootingButton}
+                onPress={async () => {
+                  if (!imageUri) return;
+                  const jpegUri = await ImageManipulator.manipulateAsync(
+                    imageUri,
+                    [],
+                    { format: ImageManipulator.SaveFormat.JPEG }
+                  );
+                  setImageUri(jpegUri.uri);
+                  Alert.alert('JPEGに変換しました', 'フォーマットをJPEGに変換しました。再度テストしてください。');
+                }}
+              >
+                <Text style={styles.troubleshootingButtonText}>JPEGに変換して再試行</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.tipContainer}>
+              <Text style={styles.tipTitle}>3. モックデータを使用する</Text>
+              <TouchableOpacity
+                style={styles.troubleshootingButton}
+                onPress={() => {
+                  setUseMockData(true);
+                  if (imageUri) {
+                    processImage(imageUri);
+                  }
+                }}
+              >
+                <Text style={styles.troubleshootingButtonText}>モックデータに切り替え</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+        
+        {/* デバッグ情報表示 */}
+        {debugInfo ? (
+          <View style={styles.debugSection}>
+            <Text style={styles.debugTitle}>デバッグ情報:</Text>
+            <Text style={styles.debugText}>{debugInfo}</Text>
+          </View>
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );
@@ -387,6 +611,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     color: '#334155',
+    marginBottom: 16,
+  },
+  optionsContainer: {
+    marginTop: 8,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#E2E8F0',
+  },
+  optionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  mockDataText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#64748B',
   },
   imageSection: {
     marginBottom: 16,
@@ -556,5 +798,77 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     color: '#B91C1C',
+    marginBottom: 16,
+  },
+  mockDataButton: {
+    backgroundColor: '#FEE2E2',
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+  },
+  mockDataButtonText: {
+    color: '#DC2626',
+    fontWeight: '500',
+  },
+  debugSection: {
+    marginBottom: 16,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    borderRadius: 12,
+    padding: 16,
+  },
+  debugTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#3B82F6',
+    marginBottom: 8,
+  },
+  debugText: {
+    fontSize: 12,
+    fontFamily: 'monospace',
+    color: '#1E40AF',
+    lineHeight: 18,
+  },
+  troubleshootingSection: {
+    marginBottom: 16,
+    backgroundColor: '#FEF9C3',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    borderRadius: 12,
+    padding: 16,
+  },
+  troubleshootingTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#B45309',
+    marginBottom: 8,
+  },
+  troubleshootingText: {
+    fontSize: 14,
+    color: '#92400E',
+    marginBottom: 16,
+  },
+  tipContainer: {
+    marginBottom: 12,
+    backgroundColor: '#FFFBEB',
+    borderRadius: 8,
+    padding: 12,
+  },
+  tipTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#B45309',
+    marginBottom: 8,
+  },
+  troubleshootingButton: {
+    backgroundColor: '#FDE68A',
+    borderRadius: 8,
+    padding: 10,
+    alignItems: 'center',
+  },
+  troubleshootingButtonText: {
+    color: '#92400E',
+    fontWeight: '500',
   },
 }); 
