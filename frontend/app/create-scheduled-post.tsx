@@ -16,13 +16,17 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Camera, Upload, Calendar, Clock, ChevronDown, Check, Instagram, Twitter, Users, Info, Send, Facebook, Snail as Snapchat } from 'lucide-react-native';
 import Animated, {
   FadeIn,
   FadeInDown,
   FadeInUp,
 } from 'react-native-reanimated';
+import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
+import { Asset } from 'expo-asset';
+import { recognizeFacesFromImage, getSuggestedEmails, getFaceCoordinates } from '../utils/apiService';
 
 const { width } = Dimensions.get('window');
 
@@ -35,7 +39,8 @@ type ContactType = {
   id: string;
   name: string;
   email: string;
-  avatarUrl?: string;
+  avatarUrl?: string | any;  // requireしたモジュールも受け入れられるように型を調整
+  isLocalImage?: boolean;
 };
 
 // Sample contacts - in a real app, these would come from the user's contacts list
@@ -45,29 +50,52 @@ const SAMPLE_CONTACTS: ContactType[] = [
     name: '佐藤 健太',
     email: 'kenta.sato@example.com',
     avatarUrl: 'https://randomuser.me/api/portraits/men/32.jpg',
+    isLocalImage: false,
   },
   {
     id: '2',
     name: '鈴木 美咲',
     email: 'misaki.suzuki@example.com',
     avatarUrl: 'https://randomuser.me/api/portraits/women/44.jpg',
+    isLocalImage: false,
   },
   {
     id: '3',
     name: '田中 大輔',
     email: 'daisuke.tanaka@example.com',
     avatarUrl: 'https://randomuser.me/api/portraits/men/62.jpg',
+    isLocalImage: false,
   },
   {
     id: '4',
     name: '山田 花子',
     email: 'hanako.yamada@example.com',
     avatarUrl: 'https://randomuser.me/api/portraits/women/17.jpg',
+    isLocalImage: false,
   },
 ];
 
 // プラットフォームのオプション
 const PLATFORMS: PlatformType[] = ['instagram', 'twitter', 'snapchat', 'tiktok', 'facebook'];
+
+// 画像のMIMEタイプを取得する関数
+const getMimeType = async (uri: string) => {
+  // URIからファイル拡張子を取得
+  const extension = uri.split('.').pop()?.toLowerCase();
+  
+  switch (extension) {
+    case 'jpg':
+    case 'jpeg':
+      return 'image/jpeg';
+    case 'png':
+      return 'image/png';
+    case 'webp':
+      return 'image/webp';
+    default:
+      // 拡張子から判断できない場合はJPEGとする
+      return 'image/jpeg';
+  }
+};
 
 export default function CreateScheduledPostScreen() {
   const scrollViewRef = useRef<ScrollView>(null);
@@ -94,12 +122,200 @@ export default function CreateScheduledPostScreen() {
   // 自動投稿設定
   const [autoPost, setAutoPost] = useState<boolean>(true);
 
+  // ルートパラメータを取得
+  const params = useLocalSearchParams();
+  const recognizedFacesParam = params.recognizedFaces as string | undefined;
+
+  // 顔認識関連のステート追加
+  const [processingImage, setProcessingImage] = useState<boolean>(false);
+  const [faceCoordinates, setFaceCoordinates] = useState<any[]>([]);
+  const [detectionsVisible, setDetectionsVisible] = useState<boolean>(true);
+  const [recognitionResult, setRecognitionResult] = useState<any>(null);
+
   // When selected contacts change, update the permission emails
   useEffect(() => {
     if (selectedContacts.length > 0) {
       setPermissionEmails(selectedContacts.map(contact => contact.email).join(', '));
     }
   }, [selectedContacts]);
+
+  // 顔認識処理を行う関数を修正
+  const performFacialRecognition = async (imageUri: string) => {
+    if (!imageUri) {
+      Alert.alert('画像を選択してください');
+      return;
+    }
+    
+    try {
+      setRecognizingFace(true);
+      setProcessingImage(true);
+      
+      // ファイル情報の取得
+      console.log('Checking file at URI:', imageUri);
+      const fileInfo = await FileSystem.getInfoAsync(imageUri);
+      
+      if (!fileInfo.exists || fileInfo.isDirectory === true) {
+        console.error('File does not exist or is a directory:', imageUri);
+        throw new Error('指定されたファイルが存在しないか、ディレクトリです');
+      }
+      
+      console.log('File exists, size:', fileInfo.size);
+      
+      // MIMEタイプを取得
+      const mimeType = await getMimeType(imageUri);
+      console.log('MIME type:', mimeType);
+      
+      // 画像をBase64に変換
+      console.log('Reading file as base64...');
+      const base64Image = await FileSystem.readAsStringAsync(imageUri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      
+      if (!base64Image) {
+        throw new Error('画像の読み込みに失敗しました');
+      }
+      
+      console.log('Base64 image length:', base64Image.length);
+      
+      // 顔認識APIを呼び出し
+      console.log('Calling face recognition API...');
+      const response = await recognizeFacesFromImage(`data:${mimeType};base64,${base64Image}`);
+      setRecognitionResult(response);
+      
+      if (response.status === 'success' && response.faces.length > 0) {
+        console.log('Faces detected:', response.faces.length);
+        // メールアドレスの提案を取得
+        const emails = getSuggestedEmails(response.faces);
+        
+        // 検出された顔の情報から連絡先データを作成
+        const contacts = emails.map((email, index) => {
+          // メールアドレスに基づいて適切なアバター画像を選択
+          let avatarUri;
+          let isLocalImage = false;
+          
+          // ローカルの画像ファイルを使用
+          if (email.includes('reina') || email.includes('sumi')) {
+            // 鷲見玲奈用の画像
+            avatarUri = require('../assets/images/sumi_reina.jpg');
+            isLocalImage = true;
+          } else if (email.includes('hikakin') || email.includes('kai')) {
+            // ヒカキン用の画像
+            avatarUri = require('../assets/images/hikakin.jpg');
+            isLocalImage = true;
+          } else {
+            // デフォルトでは元の画像を使用
+            avatarUri = imageUri;
+            isLocalImage = false;
+          }
+          
+          return {
+            id: `face-${index}`,
+            name: email.includes('reina') ? '澄玲奈' : 
+                 email.includes('hikakin') ? 'ヒカキン' : 
+                 `検出された人物 ${index + 1}`,
+            email: email,
+            avatarUrl: avatarUri,
+            isLocalImage: isLocalImage
+          };
+        });
+        
+        setSuggestedContacts(contacts);
+        
+        // 顔の座標を取得
+        const coordinates = getFaceCoordinates(response.faces);
+        setFaceCoordinates(coordinates);
+        
+        Alert.alert(
+          '顔認識完了',
+          `画像から${contacts.length}人の連絡先が見つかりました。`
+        );
+      } else {
+        console.log('No faces detected or API returned error');
+        Alert.alert(
+          '顔認識結果',
+          '画像から顔を検出できませんでした。別の画像を試してください。'
+        );
+      }
+      
+    } catch (error) {
+      console.error('Face recognition error:', error);
+      if (error instanceof Error) {
+        Alert.alert(
+          'エラー',
+          `顔認識処理中にエラーが発生しました: ${error.message}`
+        );
+      } else {
+        Alert.alert(
+          'エラー',
+          '顔認識処理中に不明なエラーが発生しました。再度お試しください。'
+        );
+      }
+    } finally {
+      setRecognizingFace(false);
+      setProcessingImage(false);
+    }
+  };
+
+  // 写真撮影関数を修正
+  const takePicture = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    
+    if (status !== 'granted') {
+      Alert.alert('カメラのアクセス許可が必要です');
+      return;
+    }
+    
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: false,
+      quality: 1,
+    });
+    
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const selectedUri = result.assets[0].uri;
+      setImageUrl(selectedUri);
+      
+      // 顔認識を実行
+      await performFacialRecognition(selectedUri);
+    }
+  };
+
+  // 画像アップロード関数を修正
+  const uploadImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: false,
+      quality: 1,
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const selectedUri = result.assets[0].uri;
+      setImageUrl(selectedUri);
+      
+      // 顔認識を実行
+      await performFacialRecognition(selectedUri);
+    }
+  };
+
+  // 顔の枠を描画
+  const renderFaceBoxes = () => {
+    if (!faceCoordinates.length || !detectionsVisible) return null;
+    
+    return faceCoordinates.map((face, index) => (
+      <View
+        key={`face-${index}`}
+        style={{
+          position: 'absolute',
+          left: `${face.Left * 100}%`,
+          top: `${face.Top * 100}%`,
+          width: `${face.Width * 100}%`,
+          height: `${face.Height * 100}%`,
+          borderWidth: 2,
+          borderColor: '#10B981',
+          borderRadius: 4,
+        }}
+      />
+    ));
+  };
 
   const nextStep = () => {
     if (currentStep < 3) {
@@ -175,56 +391,6 @@ export default function CreateScheduledPostScreen() {
           onPress: () => router.replace('/scheduled'),
         },
       ]
-    );
-  };
-
-  // 顔認識処理を行う関数
-  const performFacialRecognition = (imageUri: string) => {
-    // 実際のアプリでは、AIやML APIを使用して顔認識を行う
-    // ここではモック処理としてタイマーとサンプルデータを使用
-    setRecognizingFace(true);
-    
-    // 顔認識の処理時間をシミュレート（2秒）
-    setTimeout(() => {
-      // ランダムにサンプルコンタクトから2-3人を選択
-      const numContacts = Math.floor(Math.random() * 2) + 2; // 2〜3人
-      const shuffled = [...SAMPLE_CONTACTS].sort(() => 0.5 - Math.random());
-      const recognized = shuffled.slice(0, numContacts);
-      
-      setSuggestedContacts(recognized);
-      setRecognizingFace(false);
-      
-      Alert.alert(
-        '顔認識完了',
-        `画像から${recognized.length}人の連絡先が見つかりました。`
-      );
-    }, 2000);
-  };
-
-  const takePicture = () => {
-    // 実際のアプリではカメラAPIを使用
-    // ここではサンプル画像を設定
-    const imageUri = 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&auto=format&q=80';
-    setImageUrl(imageUri);
-    
-    // 顔認識を実行
-    performFacialRecognition(imageUri);
-    
-    Alert.alert('写真を撮影しました', '人物の写真が正常に撮影されました。顔認識を実行中...');
-  };
-
-  const uploadImage = () => {
-    // 実際のアプリではファイル選択APIを使用
-    // ここではサンプル画像を設定
-    const imageUri = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&q=80';
-    setImageUrl(imageUri);
-    
-    // 顔認識を実行
-    performFacialRecognition(imageUri);
-    
-    Alert.alert(
-      '画像をアップロードしました',
-      '人物の写真が正常にアップロードされました。顔認識を実行中...'
     );
   };
 
@@ -349,6 +515,15 @@ export default function CreateScheduledPostScreen() {
             style={styles.imagePreview}
             resizeMode="cover"
           />
+          {renderFaceBoxes()}
+          
+          {processingImage && (
+            <View style={styles.processingOverlay}>
+              <ActivityIndicator color="#FFFFFF" size="large" />
+              <Text style={styles.processingText}>顔を認識中...</Text>
+            </View>
+          )}
+          
           <View style={styles.editOverlay}>
             <TouchableOpacity
               style={styles.editButton}
@@ -506,7 +681,19 @@ export default function CreateScheduledPostScreen() {
                       >
                         <View style={styles.contactInfo}>
                           {contact.avatarUrl ? (
-                            <Image source={{ uri: contact.avatarUrl }} style={styles.contactAvatar} />
+                            contact.isLocalImage ? (
+                              <Image 
+                                source={contact.avatarUrl} 
+                                style={styles.contactAvatar}
+                                defaultSource={require('../assets/images/favicon.png')} // フォールバック画像
+                              />
+                            ) : (
+                              <Image 
+                                source={{ uri: contact.avatarUrl }} 
+                                style={styles.contactAvatar}
+                                defaultSource={require('../assets/images/favicon.png')} // フォールバック画像
+                              />
+                            )
                           ) : (
                             <View style={styles.contactAvatarPlaceholder}>
                               <Text style={styles.contactAvatarText}>
@@ -602,6 +789,24 @@ export default function CreateScheduledPostScreen() {
       setSelectedContacts([...selectedContacts, contact]);
     }
   };
+
+  useEffect(() => {
+    // アプリ起動時にアセットを事前読み込み
+    const preloadAssets = async () => {
+      try {
+        // ローカルの画像を事前読み込み
+        await Asset.loadAsync([
+          require('../assets/images/sumi_reina.jpg'),
+          require('../assets/images/hikakin.jpg')
+        ]);
+        console.log('Assets preloaded successfully');
+      } catch (error) {
+        console.error('Error preloading assets:', error);
+      }
+    };
+    
+    preloadAssets();
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -1129,5 +1334,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '400',
     color: '#64748B',
+  },
+  processingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  processingText: {
+    color: '#FFFFFF',
+    marginTop: 8,
+    fontSize: 16,
+    fontWeight: '500',
   },
 });

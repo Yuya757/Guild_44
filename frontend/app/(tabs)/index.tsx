@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Alert, Dimensions, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { Plus, Filter, TriangleAlert as AlertTriangle, Calendar, Clock, Instagram, Twitter, Facebook, Snail as Snapchat } from 'lucide-react-native';
+import { Plus, Filter, TriangleAlert as AlertTriangle, Calendar, Clock, Instagram, Twitter, Facebook, Snail as Snapchat, Scan } from 'lucide-react-native';
 import Animated, { FadeInUp, FadeInRight } from 'react-native-reanimated';
 
 const { width } = Dimensions.get('window');
@@ -291,6 +291,10 @@ export default function HomeScreen() {
     </Animated.View>
   );
 
+  const navigateToFaceRecognitionTest = () => {
+    router.push('/face-recognition-simple');
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -349,6 +353,14 @@ export default function HomeScreen() {
             scrollEnabled={false}
           />
         </View>
+
+        <TouchableOpacity 
+          style={styles.testButton}
+          onPress={navigateToFaceRecognitionTest}
+        >
+          <Scan size={20} {...{color: "#FFFFFF"} as any} />
+          <Text style={styles.testButtonText}>顔認識テストを試す</Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
@@ -627,5 +639,21 @@ const styles = StyleSheet.create({
   requestType: {
     fontSize: 12,
     fontWeight: '500',
+  },
+  testButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#3B82F6',
+    borderRadius: 8,
+    padding: 12,
+    margin: 16,
+    marginTop: 0,
+    marginBottom: 12,
+  },
+  testButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    marginLeft: 8,
   },
 });
