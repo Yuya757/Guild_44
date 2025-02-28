@@ -66,8 +66,12 @@ export default function FaceRecognitionSimpleScreen() {
       setSuggestedEmails([]);
       setFaceCoordinates([]);
       
-      // 画像が選択されたら自動的に顔認識を実行
-      processImage(result.assets[0].uri);
+      try {
+        await processImage(result.assets[0].uri); // await を追加
+      } catch (error) {
+        console.error('Error processing image:', error);
+        Alert.alert('エラー', '画像の処理中にエラーが発生しました。');
+      }
     }
   };
 
@@ -126,40 +130,131 @@ export default function FaceRecognitionSimpleScreen() {
     }
   };
 
-  // 顔認識処理
+  // // 顔認識処理
+  // const processImage = async (uri: string) => {
+  //   if (!uri) {
+  //     Alert.alert('画像を選択してください');
+  //     return;
+  //   }
+    
+  //   try {
+  //     setIsProcessing(true);
+      
+  //     // MIMEタイプを取得
+  //     const mimeType = await getMimeType(uri);
+      
+  //     // 画像をBase64に変換
+  //     const base64Image = await FileSystem.readAsStringAsync(uri, {
+  //       encoding: FileSystem.EncodingType.Base64,
+  //     });
+      
+  //     // 顔認識APIを呼び出し
+  //     const response = await recognizeFacesFromImage(`data:${mimeType};base64,${base64Image}`);
+  //     setRecognitionResult(response);
+      
+  //     if (response.status === 'success' && response.faces.length > 0) {
+  //       // メールアドレスの提案を取得
+  //       const emails = getSuggestedEmails(response.faces);
+  //       setSuggestedEmails(emails);
+        
+  //       // 顔の座標を取得
+  //       const coordinates = getFaceCoordinates(response.faces);
+  //       setFaceCoordinates(coordinates);
+  //     }
+      
+  //   } catch (error) {
+  //     console.error('Face recognition error:', error);
+  //     Alert.alert(
+  //       'エラー',
+  //       '顔認識処理中にエラーが発生しました。再度お試しください。'
+  //     );
+  //   } finally {
+  //     setIsProcessing(false);
+  //   }
+  // };
   const processImage = async (uri: string) => {
     if (!uri) {
       Alert.alert('画像を選択してください');
       return;
     }
-    
     try {
       setIsProcessing(true);
-      
       // MIMEタイプを取得
-      const mimeType = await getMimeType(uri);
-      
+      let mimeType;
+      try {
+        mimeType = await getMimeType(uri);
+      } catch (error) {
+        console.log('Error getting MIME type:', error);
+        Alert.alert('エラー', '画像の形式がサポートされていません。');
+        return;
+      }
+
+      // ファイルの存在を確認
+      const fileInfo = await FileSystem.getInfoAsync(uri);
+      if (!fileInfo.exists) {
+        console.log('File does not exist:', uri);
+        Alert.alert('エラー', '指定されたファイルが存在しません。');
+        return;
+      }
+      // MIMEタイプを取得
+      try {
+        mimeType = await getMimeType(uri);
+      } catch (error) {
+        console.log('Error getting MIME type:');
+        Alert.alert('エラー', '画像の形式がサポートされていません。');
+        return;
+      }
+  
       // 画像をBase64に変換
-      const base64Image = await FileSystem.readAsStringAsync(uri, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
-      
+      let base64Image;
+      try {
+        base64Image = await FileSystem.readAsStringAsync(uri, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+      } catch (error) {
+        console.log('Error reading image file2:');
+        Alert.alert('エラー', '画像の読み取りに失敗しました。');
+        return;
+      }
+  
       // 顔認識APIを呼び出し
       const response = await recognizeFacesFromImage(`data:${mimeType};base64,${base64Image}`);
+      console.log(JSON.stringify(response, null, 2));
+  
+      // APIレスポンスのバリデーション
+      if (!response || !response.status || !Array.isArray(response.faces)) {
+        throw new Error('Invalid API response');
+      }
+  
       setRecognitionResult(response);
-      
+  
       if (response.status === 'success' && response.faces.length > 0) {
         // メールアドレスの提案を取得
-        const emails = getSuggestedEmails(response.faces);
-        setSuggestedEmails(emails);
-        
-        // 顔の座標を取得
-        const coordinates = getFaceCoordinates(response.faces);
-        setFaceCoordinates(coordinates);
+        try {
+          const emails = getSuggestedEmails(response.faces);
+          setSuggestedEmails(emails);
+          console.log(emails);
+        } catch (error) {
+          console.log('Error getting suggested emails:');
+          Alert.alert('エラー', 'メールアドレスの取得中にエラーが発生しました。');
+        }
+  
+        // // 顔の座標を取得
+        // try {
+        //   const coordinates = getFaceCoordinates(response.faces);
+        //   setFaceCoordinates(coordinates);
+        // } catch (error) {
+        //   console.log('Error getting face coordinates:');
+        //   Alert.alert('エラー', '顔の座標の取得中にエラーが発生しました。');
+        // }
       }
-      
+  
     } catch (error) {
-      console.error('Face recognition error:', error);
+      if (error instanceof Error) {
+        console.error('Face recognition error:', error.message);
+      } else {
+        console.error('Face recognition error:', error);
+      }
       Alert.alert(
         'エラー',
         '顔認識処理中にエラーが発生しました。再度お試しください。'
@@ -269,23 +364,23 @@ export default function FaceRecognitionSimpleScreen() {
           )}
         </View>
         
-        {faceCoordinates.length > 0 && (
+        {suggestedEmails.length > 0 && (
           <View style={styles.resultSection}>
             <View style={styles.resultHeader}>
               <Check size={24} {...{color: "#10B981"} as any} />
               <Text style={styles.resultTitle}>
-                {faceCoordinates.length}人の顔を検出しました
+                {suggestedEmails.length}人の顔を検出しました
               </Text>
             </View>
             
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={styles.toggleButton}
               onPress={() => setDetectionsVisible(!detectionsVisible)}
             >
               <Text style={styles.toggleButtonText}>
                 {detectionsVisible ? '顔の枠を非表示' : '顔の枠を表示'}
               </Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
             
             {suggestedEmails.length > 0 && (
               <View style={styles.emailSection}>
