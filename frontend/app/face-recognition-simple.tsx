@@ -52,6 +52,9 @@ export default function FaceRecognitionSimpleScreen() {
   const [faceCoordinates, setFaceCoordinates] = useState<any[]>([]);
   const [detectionsVisible, setDetectionsVisible] = useState(true);
   
+  // テスト画像をrequireするコードは削除し、使用しない
+  // ImagePickerを使用して画像を選択するため、アセットのプリロードは不要
+  
   // 写真を選択
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -104,161 +107,114 @@ export default function FaceRecognitionSimpleScreen() {
   const useTestImage = async () => {
     try {
       setIsProcessing(true);
+      console.log('Using ImagePicker instead of test image due to asset issues');
       
-      // テスト画像のパスを指定（JPEGフォーマットを使用）
-      const asset = Asset.fromModule(require('../assets/test-image.jpg'));
-      await asset.downloadAsync();
-      
-      if (asset.localUri) {
-        setImageUri(asset.localUri);
+      // 画像ピッカーを起動して、ユーザーに画像を選択してもらう
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: false,
+        quality: 1,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const selectedUri = result.assets[0].uri;
+        console.log('Selected image URI:', selectedUri);
+        
+        setImageUri(selectedUri);
         setRecognitionResult(null);
         setSuggestedEmails([]);
         setFaceCoordinates([]);
         
-        // テスト画像をロードしたら自動的に顔認識を実行
-        processImage(asset.localUri);
+        try {
+          await processImage(selectedUri);
+        } catch (processError) {
+          console.error('Error processing image:', processError);
+          Alert.alert(
+            'エラー',
+            '画像の処理中にエラーが発生しました。再試行してください。'
+          );
+        }
       } else {
-        throw new Error('テスト画像の読み込みに失敗しました');
+        console.log('Image selection cancelled');
+        setIsProcessing(false);
       }
     } catch (error) {
-      console.error('Test image error:', error);
+      console.error('Image picker error:', error);
       Alert.alert(
         'エラー',
-        'テスト画像の読み込みに失敗しました。以下を確認してください：\n\n1. assets/test-image.jpgが存在すること\n2. 画像形式がJPEGであること'
+        '画像の選択中にエラーが発生しました。再試行してください。'
       );
       setIsProcessing(false);
     }
   };
 
-  // // 顔認識処理
-  // const processImage = async (uri: string) => {
-  //   if (!uri) {
-  //     Alert.alert('画像を選択してください');
-  //     return;
-  //   }
-    
-  //   try {
-  //     setIsProcessing(true);
-      
-  //     // MIMEタイプを取得
-  //     const mimeType = await getMimeType(uri);
-      
-  //     // 画像をBase64に変換
-  //     const base64Image = await FileSystem.readAsStringAsync(uri, {
-  //       encoding: FileSystem.EncodingType.Base64,
-  //     });
-      
-  //     // 顔認識APIを呼び出し
-  //     const response = await recognizeFacesFromImage(`data:${mimeType};base64,${base64Image}`);
-  //     setRecognitionResult(response);
-      
-  //     if (response.status === 'success' && response.faces.length > 0) {
-  //       // メールアドレスの提案を取得
-  //       const emails = getSuggestedEmails(response.faces);
-  //       setSuggestedEmails(emails);
-        
-  //       // 顔の座標を取得
-  //       const coordinates = getFaceCoordinates(response.faces);
-  //       setFaceCoordinates(coordinates);
-  //     }
-      
-  //   } catch (error) {
-  //     console.error('Face recognition error:', error);
-  //     Alert.alert(
-  //       'エラー',
-  //       '顔認識処理中にエラーが発生しました。再度お試しください。'
-  //     );
-  //   } finally {
-  //     setIsProcessing(false);
-  //   }
-  // };
   const processImage = async (uri: string) => {
     if (!uri) {
       Alert.alert('画像を選択してください');
       return;
     }
+    
     try {
       setIsProcessing(true);
-      // MIMEタイプを取得
-      let mimeType;
-      try {
-        mimeType = await getMimeType(uri);
-      } catch (error) {
-        console.log('Error getting MIME type:', error);
-        Alert.alert('エラー', '画像の形式がサポートされていません。');
-        return;
-      }
-
-      // ファイルの存在を確認
+      
+      // ファイル情報の取得
+      console.log('Checking file at URI:', uri);
       const fileInfo = await FileSystem.getInfoAsync(uri);
-      if (!fileInfo.exists) {
-        console.log('File does not exist:', uri);
-        Alert.alert('エラー', '指定されたファイルが存在しません。');
-        return;
+      
+      if (!fileInfo.exists || !fileInfo.isDirectory === false) {
+        console.error('File does not exist or is a directory:', uri);
+        throw new Error('指定されたファイルが存在しないか、ディレクトリです');
       }
+      
+      console.log('File exists, size:', fileInfo.size);
+      
       // MIMEタイプを取得
-      try {
-        mimeType = await getMimeType(uri);
-      } catch (error) {
-        console.log('Error getting MIME type:');
-        Alert.alert('エラー', '画像の形式がサポートされていません。');
-        return;
-      }
-  
+      const mimeType = await getMimeType(uri);
+      console.log('MIME type:', mimeType);
+      
       // 画像をBase64に変換
-      let base64Image;
-      try {
-        base64Image = await FileSystem.readAsStringAsync(uri, {
-          encoding: FileSystem.EncodingType.Base64,
-        });
-      } catch (error) {
-        console.log('Error reading image file2:');
-        Alert.alert('エラー', '画像の読み取りに失敗しました。');
-        return;
+      console.log('Reading file as base64...');
+      const base64Image = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      
+      if (!base64Image) {
+        throw new Error('画像の読み込みに失敗しました');
       }
-  
+      
+      console.log('Base64 image length:', base64Image.length);
+      
       // 顔認識APIを呼び出し
+      console.log('Calling face recognition API...');
       const response = await recognizeFacesFromImage(`data:${mimeType};base64,${base64Image}`);
-      console.log(JSON.stringify(response, null, 2));
-  
-      // APIレスポンスのバリデーション
-      if (!response || !response.status || !Array.isArray(response.faces)) {
-        throw new Error('Invalid API response');
-      }
-  
       setRecognitionResult(response);
-  
+      
       if (response.status === 'success' && response.faces.length > 0) {
+        console.log('Faces detected:', response.faces.length);
         // メールアドレスの提案を取得
-        try {
-          const emails = getSuggestedEmails(response.faces);
-          setSuggestedEmails(emails);
-          console.log(emails);
-        } catch (error) {
-          console.log('Error getting suggested emails:');
-          Alert.alert('エラー', 'メールアドレスの取得中にエラーが発生しました。');
-        }
-  
-        // // 顔の座標を取得
-        // try {
-        //   const coordinates = getFaceCoordinates(response.faces);
-        //   setFaceCoordinates(coordinates);
-        // } catch (error) {
-        //   console.log('Error getting face coordinates:');
-        //   Alert.alert('エラー', '顔の座標の取得中にエラーが発生しました。');
-        // }
-      }
-  
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error('Face recognition error:', error.message);
+        const emails = getSuggestedEmails(response.faces);
+        setSuggestedEmails(emails);
+        
+        // 顔の座標を取得
+        const coordinates = getFaceCoordinates(response.faces);
+        setFaceCoordinates(coordinates);
       } else {
-        console.error('Face recognition error:', error);
+        console.log('No faces detected or API returned error');
       }
-      Alert.alert(
-        'エラー',
-        '顔認識処理中にエラーが発生しました。再度お試しください。'
-      );
+      
+    } catch (error) {
+      console.error('Face recognition error:', error);
+      if (error instanceof Error) {
+        Alert.alert(
+          'エラー',
+          `顔認識処理中にエラーが発生しました: ${error.message}`
+        );
+      } else {
+        Alert.alert(
+          'エラー',
+          '顔認識処理中に不明なエラーが発生しました。再度お試しください。'
+        );
+      }
     } finally {
       setIsProcessing(false);
     }
@@ -358,7 +314,7 @@ export default function FaceRecognitionSimpleScreen() {
                 onPress={useTestImage}
               >
                 <Beaker size={32} {...{color: "#10B981"} as any} />
-                <Text style={[styles.uploadOptionText, {color: "#10B981"}]}>テスト画像を使用（JPG）</Text>
+                <Text style={[styles.uploadOptionText, {color: "#10B981"}]}>ギャラリーから選択</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -652,4 +608,4 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: '#B91C1C',
   },
-}); 
+});

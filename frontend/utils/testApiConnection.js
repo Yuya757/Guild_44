@@ -4,7 +4,7 @@ const path = require('path');
 const fetch = require('node-fetch');
 
 // テスト用の画像ファイルパス（プロジェクト内にテスト用の画像を配置することを想定）
-const TEST_IMAGE_PATH = path.join(__dirname, '../assets/test-image.jpg');
+const TEST_IMAGE_PATH = path.join(__dirname, '../assets/images/test-image.jpeg');
 
 // APIの設定
 const API_URL = 'https://62az2hs957.execute-api.ap-northeast-1.amazonaws.com/prod/search';
