@@ -7,6 +7,30 @@ import Animated, { FadeInUp, FadeInRight } from 'react-native-reanimated';
 
 const { width } = Dimensions.get('window');
 
+// Define types for your data
+type StatusType = 'approved' | 'pending' | 'denied' | string;
+
+type RequestItem = {
+  id: string;
+  image: string;
+  title: string;
+  owner: string;
+  purpose?: string;
+  date: string;
+  status: StatusType;
+  platform?: string;
+};
+
+type ScheduledPostItem = {
+  id: string;
+  image: string;
+  caption: string;
+  scheduledDate: string;
+  scheduledTime: string;
+  platform: string;
+  status: StatusType;
+};
+
 // 人物写真のモックデータ
 const MOCK_REQUESTS = [
   {
@@ -82,7 +106,7 @@ export default function HomeScreen() {
   const [requests, setRequests] = useState(MOCK_REQUESTS);
   const [scheduledPosts, setScheduledPosts] = useState(MOCK_SCHEDULED_POSTS);
 
-  const getPlatformIcon = (platform) => {
+  const getPlatformIcon = (platform: any) => {
     switch (platform) {
       case 'instagram':
         return <Instagram size={16} color="#E1306C" />;
@@ -100,7 +124,7 @@ export default function HomeScreen() {
     }
   };
 
-  const getStatusColor = (status) => {
+  const getStatusColor = (status: any) => {
     switch (status) {
       case 'approved':
         return '#10B981';
@@ -113,7 +137,7 @@ export default function HomeScreen() {
     }
   };
 
-  const getStatusText = (status) => {
+  const getStatusText = (status: StatusType): string => {
     switch (status) {
       case 'approved':
         return '承認済';
@@ -126,7 +150,7 @@ export default function HomeScreen() {
     }
   };
 
-  const handleReportImage = (item) => {
+  const handleReportImage = (item: RequestItem) => {
     Alert.alert(
       '写真の報告',
       'この写真に関する問題を報告しますか？',
@@ -147,7 +171,7 @@ export default function HomeScreen() {
     );
   };
 
-  const reportNotMe = (item) => {
+  const reportNotMe = (item: RequestItem) => {
     Alert.alert(
       '報告を送信しました',
       '「自分ではない」という報告を受け付けました。確認後、対応いたします。',
@@ -155,7 +179,7 @@ export default function HomeScreen() {
     );
   };
 
-  const reportInappropriate = (item) => {
+  const reportInappropriate = (item: RequestItem) => {
     Alert.alert(
       '報告を送信しました',
       '「不適切な内容」という報告を受け付けました。確認後、対応いたします。',
@@ -163,7 +187,7 @@ export default function HomeScreen() {
     );
   };
 
-  const renderRequestItem = ({ item, index }) => (
+  const renderRequestItem = ({ item, index }: { item: RequestItem; index: number }) => (
     <Animated.View
       entering={FadeInUp.delay(index * 100).springify()}
       style={styles.requestItem}
@@ -209,7 +233,7 @@ export default function HomeScreen() {
     </Animated.View>
   );
 
-  const renderScheduledPostItem = ({ item, index }) => (
+  const renderScheduledPostItem = ({ item, index }: { item: ScheduledPostItem; index: number }) => (
     <Animated.View
       entering={FadeInRight.delay(index * 100).springify()}
       style={styles.scheduledPostItem}
@@ -255,7 +279,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>画像使用許可</Text>
+        <Text style={styles.title}>ホーム</Text>
         <TouchableOpacity style={styles.filterButton}>
           <Filter size={20} color="#64748B" />
         </TouchableOpacity>
@@ -296,7 +320,7 @@ export default function HomeScreen() {
         <View style={styles.recentContainer}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>最近の申請</Text>
-            <TouchableOpacity onPress={() => router.push('/requests')}>
+            <TouchableOpacity onPress={() => router.push('/permission-requests' as any)}>
               <Text style={styles.seeAllText}>すべて見る</Text>
             </TouchableOpacity>
           </View>

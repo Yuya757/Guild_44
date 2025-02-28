@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import {
   Dimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -29,6 +30,42 @@ const { width } = Dimensions.get('window');
 // Define types
 type PlatformType = 'instagram' | 'twitter' | 'snapchat' | 'tiktok' | 'facebook';
 type StepType = 1 | 2 | 3;
+
+// Contact type for facial recognition results
+type ContactType = {
+  id: string;
+  name: string;
+  email: string;
+  avatarUrl?: string;
+};
+
+// Sample contacts - in a real app, these would come from the user's contacts list
+const SAMPLE_CONTACTS: ContactType[] = [
+  {
+    id: '1',
+    name: '佐藤 健太',
+    email: 'kenta.sato@example.com',
+    avatarUrl: 'https://randomuser.me/api/portraits/men/32.jpg',
+  },
+  {
+    id: '2',
+    name: '鈴木 美咲',
+    email: 'misaki.suzuki@example.com',
+    avatarUrl: 'https://randomuser.me/api/portraits/women/44.jpg',
+  },
+  {
+    id: '3',
+    name: '田中 大輔',
+    email: 'daisuke.tanaka@example.com',
+    avatarUrl: 'https://randomuser.me/api/portraits/men/62.jpg',
+  },
+  {
+    id: '4',
+    name: '山田 花子',
+    email: 'hanako.yamada@example.com',
+    avatarUrl: 'https://randomuser.me/api/portraits/women/17.jpg',
+  },
+];
 
 // プラットフォームのオプション
 const PLATFORMS: PlatformType[] = ['instagram', 'twitter', 'snapchat', 'tiktok', 'facebook'];
@@ -50,8 +87,20 @@ export default function CreateScheduledPostScreen() {
   const [requirePermission, setRequirePermission] = useState<boolean>(true);
   const [permissionEmails, setPermissionEmails] = useState<string>('');
 
+  // 顔認識関連
+  const [recognizingFace, setRecognizingFace] = useState<boolean>(false);
+  const [suggestedContacts, setSuggestedContacts] = useState<ContactType[]>([]);
+  const [selectedContacts, setSelectedContacts] = useState<ContactType[]>([]);
+
   // 自動投稿設定
   const [autoPost, setAutoPost] = useState<boolean>(true);
+
+  // When selected contacts change, update the permission emails
+  useEffect(() => {
+    if (selectedContacts.length > 0) {
+      setPermissionEmails(selectedContacts.map(contact => contact.email).join(', '));
+    }
+  }, [selectedContacts]);
 
   const nextStep = () => {
     if (currentStep < 3) {
@@ -130,24 +179,53 @@ export default function CreateScheduledPostScreen() {
     );
   };
 
+  // 顔認識処理を行う関数
+  const performFacialRecognition = (imageUri: string) => {
+    // 実際のアプリでは、AIやML APIを使用して顔認識を行う
+    // ここではモック処理としてタイマーとサンプルデータを使用
+    setRecognizingFace(true);
+    
+    // 顔認識の処理時間をシミュレート（2秒）
+    setTimeout(() => {
+      // ランダムにサンプルコンタクトから2-3人を選択
+      const numContacts = Math.floor(Math.random() * 2) + 2; // 2〜3人
+      const shuffled = [...SAMPLE_CONTACTS].sort(() => 0.5 - Math.random());
+      const recognized = shuffled.slice(0, numContacts);
+      
+      setSuggestedContacts(recognized);
+      setRecognizingFace(false);
+      
+      Alert.alert(
+        '顔認識完了',
+        `画像から${recognized.length}人の連絡先が見つかりました。`
+      );
+    }, 2000);
+  };
+
   const takePicture = () => {
     // 実際のアプリではカメラAPIを使用
     // ここではサンプル画像を設定
-    setImageUrl(
-      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&auto=format&q=80'
-    );
-    Alert.alert('写真を撮影しました', '人物の写真が正常に撮影されました。');
+    const imageUri = 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&auto=format&q=80';
+    setImageUrl(imageUri);
+    
+    // 顔認識を実行
+    performFacialRecognition(imageUri);
+    
+    Alert.alert('写真を撮影しました', '人物の写真が正常に撮影されました。顔認識を実行中...');
   };
 
   const uploadImage = () => {
     // 実際のアプリではファイル選択APIを使用
     // ここではサンプル画像を設定
-    setImageUrl(
-      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&q=80'
-    );
+    const imageUri = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&q=80';
+    setImageUrl(imageUri);
+    
+    // 顔認識を実行
+    performFacialRecognition(imageUri);
+    
     Alert.alert(
       '画像をアップロードしました',
-      '人物の写真が正常にアップロードされました。'
+      '人物の写真が正常にアップロードされました。顔認識を実行中...'
     );
   };
 
@@ -425,18 +503,64 @@ export default function CreateScheduledPostScreen() {
               <Text style={styles.permissionTitle}>許可を求める相手</Text>
             </View>
 
-            <Text style={styles.inputLabel}>メールアドレス</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="例: friend@example.com, family@example.com"
-              placeholderTextColor="#94A3B8"
-              keyboardType="email-address"
-              value={permissionEmails}
-              onChangeText={setPermissionEmails}
-            />
-            <Text style={styles.helperText}>
-              複数のメールアドレスはカンマで区切ってください
-            </Text>
+            {recognizingFace ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#3B82F6" />
+                <Text style={styles.loadingText}>顔認識処理中...</Text>
+              </View>
+            ) : (
+              <>
+                {suggestedContacts.length > 0 && (
+                  <Animated.View entering={FadeInDown} style={styles.suggestedContactsContainer}>
+                    <Text style={styles.suggestedContactsTitle}>画像から検出された連絡先:</Text>
+                    
+                    {suggestedContacts.map((contact) => (
+                      <TouchableOpacity
+                        key={contact.id}
+                        style={[
+                          styles.contactItem,
+                          selectedContacts.some(c => c.id === contact.id) && styles.selectedContactItem
+                        ]}
+                        onPress={() => toggleContactSelection(contact)}
+                      >
+                        <View style={styles.contactInfo}>
+                          {contact.avatarUrl ? (
+                            <Image source={{ uri: contact.avatarUrl }} style={styles.contactAvatar} />
+                          ) : (
+                            <View style={styles.contactAvatarPlaceholder}>
+                              <Text style={styles.contactAvatarText}>
+                                {contact.name.substring(0, 1)}
+                              </Text>
+                            </View>
+                          )}
+                          <View>
+                            <Text style={styles.contactName}>{contact.name}</Text>
+                            <Text style={styles.contactEmail}>{contact.email}</Text>
+                          </View>
+                        </View>
+                        
+                        {selectedContacts.some(c => c.id === contact.id) && (
+                          <Check size={20} color="#3B82F6" />
+                        )}
+                      </TouchableOpacity>
+                    ))}
+                  </Animated.View>
+                )}
+
+                <Text style={styles.inputLabel}>メールアドレス</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="例: friend@example.com, family@example.com"
+                  placeholderTextColor="#94A3B8"
+                  keyboardType="email-address"
+                  value={permissionEmails}
+                  onChangeText={setPermissionEmails}
+                />
+                <Text style={styles.helperText}>
+                  複数のメールアドレスはカンマで区切ってください
+                </Text>
+              </>
+            )}
           </Animated.View>
         )}
       </View>
@@ -487,6 +611,16 @@ export default function CreateScheduledPostScreen() {
       </View>
     </Animated.View>
   );
+
+  const toggleContactSelection = (contact: ContactType) => {
+    if (selectedContacts.some(c => c.id === contact.id)) {
+      // すでに選択されている場合、選択解除
+      setSelectedContacts(selectedContacts.filter(c => c.id !== contact.id));
+    } else {
+      // 選択されていない場合、選択に追加
+      setSelectedContacts([...selectedContacts, contact]);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -934,5 +1068,74 @@ const styles = StyleSheet.create({
   submitButtonContent: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  loadingText: {
+    fontSize: 16,
+    fontFamily: 'Inter-Medium',
+    color: '#64748B',
+    marginTop: 12,
+  },
+  suggestedContactsContainer: {
+    marginBottom: 20,
+  },
+  suggestedContactsTitle: {
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
+    color: '#0F172A',
+    marginBottom: 12,
+  },
+  contactItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
+    marginBottom: 8,
+    padding: 12,
+  },
+  selectedContactItem: {
+    borderColor: '#BFDBFE',
+    backgroundColor: '#F0F9FF',
+  },
+  contactInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  contactAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 12,
+  },
+  contactAvatarPlaceholder: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#E2E8F0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  contactAvatarText: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#64748B',
+  },
+  contactName: {
+    fontSize: 16,
+    fontFamily: 'Inter-Medium',
+    color: '#0F172A',
+  },
+  contactEmail: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#64748B',
   },
 });
