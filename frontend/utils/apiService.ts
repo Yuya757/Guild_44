@@ -60,11 +60,17 @@ export async function recognizeFacesFromImage(base64Image: string): Promise<Face
  * @param faces - Face recognition results
  * @returns Array of suggested emails
  */
+// export function getSuggestedEmails(faces: FaceRecognitionResponse['faces']): string[] {
+//   return faces
+//     .filter(face => face.member_info && face.member_info.Email?.S)
+//     .map(face => face.member_info.Email.S)
+//     .filter((email, index, self) => self.indexOf(email) === index); // Remove duplicates
+// }
 export function getSuggestedEmails(faces: FaceRecognitionResponse['faces']): string[] {
   return faces
-    .filter(face => face.member_info && face.member_info.Email?.S)
-    .map(face => face.member_info.Email.S)
-    .filter((email, index, self) => self.indexOf(email) === index); // Remove duplicates
+    .filter(face => face.member_info && face.member_info['e-mail']?.S) // 'e-mail' フィールドを参照
+    .map(face => face.member_info['e-mail'].S) // 'e-mail' フィールドの値を取得
+    .filter((email, index, self) => self.indexOf(email) === index); // 重複を削除
 }
 
 /**
