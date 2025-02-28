@@ -116,7 +116,7 @@ export default function FaceRecognitionTestScreen() {
         }
         
         details += `詳細情報:\n`;
-        response.faces.forEach((face, index) => {
+        response.faces.forEach((face: { face_id: any; similarity: any; member_info: { [x: string]: any; }; }, index: number) => {
           details += `\n顔 #${index + 1}:\n`;
           details += `- FaceID: ${face.face_id}\n`;
           details += `- 類似度: ${face.similarity}%\n`;
