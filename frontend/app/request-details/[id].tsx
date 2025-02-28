@@ -361,7 +361,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     color: '#0F172A',
   },
   shareButton: {
@@ -407,7 +407,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 22,
-    fontFamily: 'Inter-Bold',
+    fontWeight: '700',
     color: '#0F172A',
     flex: 1,
   },
@@ -427,7 +427,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 12,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     textTransform: 'uppercase',
   },
   infoRow: {
@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 14,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#64748B',
     marginLeft: 6,
   },
@@ -452,7 +452,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     color: '#0F172A',
     marginBottom: 12,
   },
@@ -461,13 +461,13 @@ const styles = StyleSheet.create({
   },
   sectionItemTitle: {
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#64748B',
     marginBottom: 4,
   },
   sectionItemText: {
     fontSize: 16,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#0F172A',
     lineHeight: 24,
   },
@@ -478,7 +478,7 @@ const styles = StyleSheet.create({
   },
   notesText: {
     fontSize: 16,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#0F172A',
     lineHeight: 24,
   },
@@ -495,7 +495,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#0F172A',
     minHeight: 100,
     textAlignVertical: 'top',
@@ -524,7 +524,7 @@ const styles = StyleSheet.create({
   },
   downloadButtonText: {
     fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     color: '#FFFFFF',
     marginLeft: 8,
   },
@@ -542,7 +542,7 @@ const styles = StyleSheet.create({
   },
   newRequestButtonText: {
     fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     color: '#FFFFFF',
   },
   notFoundContainer: {
@@ -553,7 +553,7 @@ const styles = StyleSheet.create({
   },
   notFoundText: {
     fontSize: 18,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '600',
     color: '#64748B',
     marginBottom: 16,
   },
@@ -565,7 +565,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     color: '#FFFFFF',
   },
 });

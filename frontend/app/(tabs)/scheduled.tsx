@@ -7,8 +7,23 @@ import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
 
 const { width } = Dimensions.get('window');
 
+// Define types
+type PlatformType = 'instagram' | 'twitter';
+type StatusType = 'approved' | 'pending' | 'denied';
+
+interface ScheduledPost {
+  id: string;
+  image: string;
+  caption: string;
+  scheduledDate: string;
+  scheduledTime: string;
+  platform: PlatformType;
+  status: StatusType;
+  owner: string;
+}
+
 // モックデータ: 予約投稿
-const MOCK_SCHEDULED_POSTS = [
+const MOCK_SCHEDULED_POSTS: ScheduledPost[] = [
   {
     id: '1',
     image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&auto=format&q=80',
@@ -52,8 +67,8 @@ const MOCK_SCHEDULED_POSTS = [
 ];
 
 export default function ScheduledPostsScreen() {
-  const [scheduledPosts, setScheduledPosts] = useState(MOCK_SCHEDULED_POSTS);
-  const [activeTab, setActiveTab] = useState('all');
+  const [scheduledPosts, setScheduledPosts] = useState<ScheduledPost[]>(MOCK_SCHEDULED_POSTS);
+  const [activeTab, setActiveTab] = useState<'all' | StatusType>('all');
   const [showFilters, setShowFilters] = useState(false);
 
   const filteredPosts = scheduledPosts.filter((post) => {
@@ -61,7 +76,7 @@ export default function ScheduledPostsScreen() {
     return post.status === activeTab;
   });
 
-  const getPlatformIcon = (platform) => {
+  const getPlatformIcon = (platform: PlatformType) => {
     switch (platform) {
       case 'instagram':
         return <Instagram size={20} color="#E1306C" />;
@@ -72,7 +87,7 @@ export default function ScheduledPostsScreen() {
     }
   };
 
-  const getPlatformName = (platform) => {
+  const getPlatformName = (platform: PlatformType) => {
     switch (platform) {
       case 'instagram':
         return 'Instagram';
@@ -83,7 +98,7 @@ export default function ScheduledPostsScreen() {
     }
   };
 
-  const getStatusColor = (status) => {
+  const getStatusColor = (status: StatusType) => {
     switch (status) {
       case 'approved':
         return '#10B981';
@@ -96,7 +111,7 @@ export default function ScheduledPostsScreen() {
     }
   };
 
-  const getStatusText = (status) => {
+  const getStatusText = (status: StatusType) => {
     switch (status) {
       case 'approved':
         return '承認済';
@@ -109,11 +124,11 @@ export default function ScheduledPostsScreen() {
     }
   };
 
-  const handleEditPost = (post) => {
+  const handleEditPost = (post: ScheduledPost) => {
     router.push(`/edit-scheduled-post/${post.id}`);
   };
 
-  const handleDeletePost = (post) => {
+  const handleDeletePost = (post: ScheduledPost) => {
     Alert.alert(
       '投稿を削除',
       'この予約投稿を削除してもよろしいですか？',
@@ -135,7 +150,7 @@ export default function ScheduledPostsScreen() {
     );
   };
 
-  const renderPostItem = ({ item, index }) => (
+  const renderPostItem = ({ item, index }: { item: ScheduledPost, index: number }) => (
     <Animated.View 
       entering={FadeInRight.delay(index * 100).springify()} 
       exiting={FadeOutLeft}
@@ -297,7 +312,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontFamily: 'Inter-Bold',
+    fontWeight: '700',
     color: '#0F172A',
   },
   filterButton: {
@@ -328,7 +343,7 @@ const styles = StyleSheet.create({
   },
   tabText: {
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#64748B',
   },
   activeTabText: {
@@ -394,7 +409,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 10,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
   },
   postContent: {
     flex: 1,
@@ -403,7 +418,7 @@ const styles = StyleSheet.create({
   },
   postCaption: {
     fontSize: 14,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#334155',
     lineHeight: 20,
     marginBottom: 8,
@@ -419,7 +434,7 @@ const styles = StyleSheet.create({
   },
   scheduleText: {
     fontSize: 12,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#64748B',
     marginLeft: 4,
   },
@@ -456,7 +471,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#94A3B8',
     marginBottom: 16,
     textAlign: 'center',
@@ -469,7 +484,7 @@ const styles = StyleSheet.create({
   },
   emptyButtonText: {
     fontSize: 14,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     color: '#FFFFFF',
   },
   createButton: {

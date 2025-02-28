@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     color: '#0F172A',
   },
   placeholder: {
@@ -398,7 +398,7 @@ const styles = StyleSheet.create({
   },
   stepNumber: {
     fontSize: 14,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     color: '#64748B',
   },
   activeStepNumber: {
@@ -415,13 +415,13 @@ const styles = StyleSheet.create({
   },
   stepTitle: {
     fontSize: 20,
-    fontFamily: 'Inter-Bold',
+    fontWeight: '700',
     color: '#0F172A',
     marginBottom: 8,
   },
   stepDescription: {
     fontSize: 14,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#64748B',
     marginBottom: 24,
   },
@@ -444,13 +444,13 @@ const styles = StyleSheet.create({
   },
   uploadOptionText: {
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#3B82F6',
     marginTop: 8,
   },
   orText: {
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#64748B',
     textAlign: 'center',
     marginVertical: 16,
@@ -474,7 +474,7 @@ const styles = StyleSheet.create({
   },
   changeImageText: {
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#3B82F6',
   },
   inputContainer: {
@@ -482,7 +482,7 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#0F172A',
     marginBottom: 8,
   },
@@ -494,7 +494,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#0F172A',
   },
   textArea: {
@@ -515,12 +515,12 @@ const styles = StyleSheet.create({
   },
   dropdownButtonText: {
     fontSize: 16,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '500',
     color: '#0F172A',
   },
   dropdownPlaceholder: {
     fontSize: 16,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#94A3B8',
   },
   dropdownMenu: {
@@ -553,7 +553,7 @@ const styles = StyleSheet.create({
   },
   dropdownItemText: {
     fontSize: 16,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#0F172A',
   },
   durationInputContainer: {
@@ -591,7 +591,7 @@ const styles = StyleSheet.create({
   termsText: {
     flex: 1,
     fontSize: 14,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#64748B',
     lineHeight: 20,
   },
@@ -615,7 +615,7 @@ const styles = StyleSheet.create({
   },
   nextButtonText: {
     fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     color: '#FFFFFF',
   },
   noteContainer: {
@@ -628,7 +628,7 @@ const styles = StyleSheet.create({
   },
   noteText: {
     fontSize: 14,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#B91C1C',
     lineHeight: 20,
   },

@@ -748,7 +748,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     color: '#0F172A',
   },
   placeholder: {
@@ -780,7 +780,7 @@ const styles = StyleSheet.create({
   },
   stepNumber: {
     fontSize: 14,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     color: '#64748B',
   },
   activeStepNumber: {
@@ -797,13 +797,13 @@ const styles = StyleSheet.create({
   },
   stepTitle: {
     fontSize: 20,
-    fontFamily: 'Inter-Bold',
+    fontWeight: '700',
     color: '#0F172A',
     marginBottom: 8,
   },
   stepDescription: {
     fontSize: 14,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#64748B',
     marginBottom: 24,
   },
@@ -817,7 +817,7 @@ const styles = StyleSheet.create({
   },
   identityCheckText: {
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#854D0E',
     marginBottom: 12,
   },
@@ -830,7 +830,7 @@ const styles = StyleSheet.create({
   },
   identityCheckButtonText: {
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#FFFFFF',
   },
   inputContainer: {
@@ -838,7 +838,7 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#0F172A',
     marginBottom: 8,
   },
@@ -850,7 +850,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#0F172A',
   },
   textArea: {
@@ -871,7 +871,7 @@ const styles = StyleSheet.create({
   },
   switchLabel: {
     fontSize: 16,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#0F172A',
     flex: 1,
   },
@@ -886,13 +886,13 @@ const styles = StyleSheet.create({
   },
   sectionSubtitle: {
     fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     color: '#0F172A',
     marginBottom: 16,
   },
   helperText: {
     fontSize: 14,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#64748B',
     marginBottom: 12,
   },
@@ -909,12 +909,12 @@ const styles = StyleSheet.create({
   },
   dropdownButtonText: {
     fontSize: 16,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#0F172A',
   },
   dropdownPlaceholder: {
     fontSize: 16,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#94A3B8',
   },
   dropdownMenu: {
@@ -947,7 +947,7 @@ const styles = StyleSheet.create({
   },
   dropdownItemText: {
     fontSize: 16,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#0F172A',
   },
   checkboxContainer: {
@@ -976,7 +976,7 @@ const styles = StyleSheet.create({
   checkboxLabel: {
     flex: 1,
     fontSize: 15,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#0F172A',
     lineHeight: 22,
   },
@@ -988,7 +988,7 @@ const styles = StyleSheet.create({
   },
   summaryTitle: {
     fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     color: '#0F172A',
     marginBottom: 12,
   },
@@ -999,13 +999,13 @@ const styles = StyleSheet.create({
   summaryLabel: {
     width: 120,
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#64748B',
   },
   summaryValue: {
     flex: 1,
     fontSize: 14,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#0F172A',
   },
   agreementSection: {
@@ -1019,7 +1019,7 @@ const styles = StyleSheet.create({
   agreementText: {
     flex: 1,
     fontSize: 14,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#0F172A',
     lineHeight: 20,
   },
@@ -1039,7 +1039,7 @@ const styles = StyleSheet.create({
   infoText: {
     flex: 1,
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#1E40AF',
     lineHeight: 20,
   },
@@ -1063,7 +1063,7 @@ const styles = StyleSheet.create({
   },
   nextButtonText: {
     fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     color: '#FFFFFF',
   },
 });

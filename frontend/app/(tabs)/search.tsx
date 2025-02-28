@@ -4,8 +4,18 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Search as SearchIcon, X, Filter, TriangleAlert as AlertTriangle } from 'lucide-react-native';
 
+// Define interface for search results
+interface SearchResultItem {
+  id: string;
+  image: string;
+  title: string;
+  owner: string;
+  status: 'approved' | 'pending' | 'denied' | string;
+  date: string;
+}
+
 // 人物写真のモックデータ
-const MOCK_REQUESTS = [
+const MOCK_REQUESTS: SearchResultItem[] = [
   {
     id: '1',
     image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&auto=format&q=80',
@@ -58,10 +68,10 @@ const MOCK_REQUESTS = [
 
 export default function SearchScreen() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [results, setResults] = useState([]);
+  const [results, setResults] = useState<SearchResultItem[]>([]);
   const [showResults, setShowResults] = useState(false);
 
-  const handleSearch = (text) => {
+  const handleSearch = (text: string) => {
     setSearchQuery(text);
     if (text.length > 0) {
       const filtered = MOCK_REQUESTS.filter(
@@ -83,7 +93,7 @@ export default function SearchScreen() {
     setShowResults(false);
   };
 
-  const getStatusColor = (status) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case 'approved':
         return '#10B981';
@@ -96,7 +106,7 @@ export default function SearchScreen() {
     }
   };
 
-  const getStatusText = (status) => {
+  const getStatusText = (status: string) => {
     switch (status) {
       case 'approved':
         return '承認済';
@@ -109,7 +119,7 @@ export default function SearchScreen() {
     }
   };
 
-  const handleReportImage = (item) => {
+  const handleReportImage = (item: SearchResultItem) => {
     Alert.alert(
       '写真の報告',
       'この写真に関する問題を報告しますか？',
@@ -130,7 +140,7 @@ export default function SearchScreen() {
     );
   };
 
-  const reportNotMe = (item) => {
+  const reportNotMe = (item: SearchResultItem) => {
     Alert.alert(
       '報告を送信しました',
       '「自分ではない」という報告を受け付けました。確認後、対応いたします。',
@@ -138,7 +148,7 @@ export default function SearchScreen() {
     );
   };
 
-  const reportInappropriate = (item) => {
+  const reportInappropriate = (item: SearchResultItem) => {
     Alert.alert(
       '報告を送信しました',
       '「不適切な内容」という報告を受け付けました。確認後、対応いたします。',
@@ -146,7 +156,7 @@ export default function SearchScreen() {
     );
   };
 
-  const renderResultItem = ({ item }) => (
+  const renderResultItem = ({ item }: { item: SearchResultItem }) => (
     <TouchableOpacity
       style={styles.resultItem}
       onPress={() => router.push(`/request-details/${item.id}`)}
@@ -246,7 +256,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontFamily: 'Inter-Bold',
+    fontWeight: '700',
     color: '#0F172A',
   },
   searchContainer: {
@@ -276,7 +286,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     fontSize: 16,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#0F172A',
   },
   clearButton: {
@@ -339,12 +349,12 @@ const styles = StyleSheet.create({
   },
   resultTitle: {
     fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     color: '#0F172A',
   },
   resultOwner: {
     fontSize: 14,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#64748B',
   },
   resultMeta: {
@@ -360,12 +370,12 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 12,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#64748B',
   },
   resultDate: {
     fontSize: 12,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#94A3B8',
     marginLeft: 8,
   },
@@ -376,7 +386,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#94A3B8',
   },
   placeholderContainer: {
@@ -387,7 +397,7 @@ const styles = StyleSheet.create({
   },
   placeholderText: {
     fontSize: 16,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#94A3B8',
     textAlign: 'center',
     lineHeight: 24,

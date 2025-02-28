@@ -5,8 +5,24 @@ import { router } from 'expo-router';
 import { Calendar, Clock, Instagram, Twitter, CheckCircle, XCircle, Bell } from 'lucide-react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 
+// Define types
+type NotificationType = 'permission_request' | 'permission_approved' | 'permission_denied' | 'post_scheduled' | 'post_published';
+type PlatformType = 'instagram' | 'twitter';
+
+interface Notification {
+  id: string;
+  type: NotificationType;
+  image: string;
+  title: string;
+  platform: PlatformType;
+  date: string;
+  time: string;
+  timestamp: string;
+  read: boolean;
+}
+
 // モックデータ: 通知
-const MOCK_NOTIFICATIONS = [
+const MOCK_NOTIFICATIONS: Notification[] = [
   {
     id: '1',
     type: 'permission_request',
@@ -65,9 +81,9 @@ const MOCK_NOTIFICATIONS = [
 ];
 
 export default function NotificationsScreen() {
-  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+  const [notifications, setNotifications] = useState<Notification[]>(MOCK_NOTIFICATIONS);
 
-  const getPlatformIcon = (platform) => {
+  const getPlatformIcon = (platform: PlatformType) => {
     switch (platform) {
       case 'instagram':
         return <Instagram size={16} color="#E1306C" />;
@@ -78,7 +94,7 @@ export default function NotificationsScreen() {
     }
   };
 
-  const getNotificationIcon = (type) => {
+  const getNotificationIcon = (type: NotificationType) => {
     switch (type) {
       case 'permission_request':
         return <Bell size={20} color="#3B82F6" />;
@@ -95,7 +111,7 @@ export default function NotificationsScreen() {
     }
   };
 
-  const getNotificationRoute = (notification) => {
+  const getNotificationRoute = (notification: Notification): string => {
     switch (notification.type) {
       case 'permission_request':
         return `/permission-request/${notification.id}`;
@@ -110,7 +126,7 @@ export default function NotificationsScreen() {
     }
   };
 
-  const markAsRead = (id) => {
+  const markAsRead = (id: string) => {
     setNotifications(
       notifications.map((notification) =>
         notification.id === id ? { ...notification, read: true } : notification
@@ -118,12 +134,14 @@ export default function NotificationsScreen() {
     );
   };
 
-  const handleNotificationPress = (notification) => {
+  const handleNotificationPress = (notification: Notification) => {
     markAsRead(notification.id);
-    router.push(getNotificationRoute(notification));
+    // Using 'as any' to bypass the router path type checking
+    // A proper fix would involve defining all valid routes in your app
+    router.push(getNotificationRoute(notification) as any);
   };
 
-  const renderNotificationItem = ({ item, index }) => (
+  const renderNotificationItem = ({ item, index }: { item: Notification, index: number }) => (
     <Animated.View
       entering={FadeInUp.delay(index * 100).springify()}
       style={[styles.notificationItem, item.read ? styles.readNotification : styles.unreadNotification]}
@@ -208,7 +226,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontFamily: 'Inter-Bold',
+    fontWeight: '700',
     color: '#0F172A',
   },
   unreadBadge: {
@@ -220,7 +238,7 @@ const styles = StyleSheet.create({
   },
   unreadBadgeText: {
     fontSize: 12,
-    fontFamily: 'Inter-Bold',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
   notificationsList: {
@@ -268,13 +286,13 @@ const styles = StyleSheet.create({
   notificationTitle: {
     flex: 1,
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#0F172A',
     marginRight: 8,
   },
   notificationTimestamp: {
     fontSize: 12,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#64748B',
   },
   notificationImage: {
@@ -307,7 +325,7 @@ const styles = StyleSheet.create({
   },
   scheduleText: {
     fontSize: 12,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#64748B',
     marginLeft: 4,
   },
@@ -321,7 +339,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#94A3B8',
     marginTop: 16,
   },

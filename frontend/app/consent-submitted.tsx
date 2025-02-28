@@ -99,14 +99,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontFamily: 'Inter-Bold',
+    fontWeight: '700',
     color: '#0F172A',
     marginBottom: 16,
     textAlign: 'center',
   },
   description: {
     fontSize: 16,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#64748B',
     textAlign: 'center',
     marginBottom: 32,
@@ -126,13 +126,13 @@ const styles = StyleSheet.create({
   },
   summaryTitle: {
     fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     color: '#0F172A',
     marginBottom: 8,
   },
   referenceNumber: {
     fontSize: 18,
-    fontFamily: 'Inter-Bold',
+    fontWeight: '700',
     color: '#3B82F6',
     marginBottom: 16,
   },
@@ -144,12 +144,12 @@ const styles = StyleSheet.create({
   summaryLabel: {
     width: 70,
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#64748B',
   },
   summaryValue: {
     fontSize: 14,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#0F172A',
   },
   statusContainer: {
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#10B981',
   },
   actionsContainer: {
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
   },
   actionButtonText: {
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#3B82F6',
     marginLeft: 8,
   },
@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
   },
   infoTitle: {
     fontSize: 18,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     color: '#0F172A',
     marginBottom: 16,
   },
@@ -218,13 +218,13 @@ const styles = StyleSheet.create({
   },
   infoNumberText: {
     fontSize: 12,
-    fontFamily: 'Inter-Bold',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
   infoText: {
     flex: 1,
     fontSize: 14,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#64748B',
     lineHeight: 20,
   },
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     color: '#FFFFFF',
   },
 });

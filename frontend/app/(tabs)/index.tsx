@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontFamily: 'Inter-Bold',
+    fontWeight: '700',
     color: '#0F172A',
   },
   filterButton: {
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
   requestButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     marginLeft: 8,
   },
   sectionHeader: {
@@ -400,12 +400,12 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     color: '#0F172A',
   },
   seeAllText: {
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#3B82F6',
   },
   scheduledContainer: {
@@ -466,14 +466,14 @@ const styles = StyleSheet.create({
   },
   scheduledPostStatusText: {
     fontSize: 10,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
   },
   scheduledPostInfo: {
     padding: 12,
   },
   scheduledPostCaption: {
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#0F172A',
     marginBottom: 8,
   },
@@ -488,7 +488,7 @@ const styles = StyleSheet.create({
   },
   scheduledPostDateText: {
     fontSize: 12,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#64748B',
     marginLeft: 4,
   },
@@ -498,7 +498,7 @@ const styles = StyleSheet.create({
   },
   scheduledPostTimeText: {
     fontSize: 12,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#64748B',
     marginLeft: 4,
   },
@@ -512,7 +512,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#94A3B8',
   },
   recentContainer: {
@@ -575,12 +575,12 @@ const styles = StyleSheet.create({
   },
   requestTitle: {
     fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     color: '#0F172A',
   },
   requestOwner: {
     fontSize: 14,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#64748B',
   },
   requestMeta: {
@@ -595,12 +595,12 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 12,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#64748B',
   },
   requestDate: {
     fontSize: 12,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#94A3B8',
     marginLeft: 'auto',
   },

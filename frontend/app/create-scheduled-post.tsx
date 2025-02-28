@@ -689,7 +689,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     color: '#0F172A',
   },
   placeholder: {
@@ -717,7 +717,7 @@ const styles = StyleSheet.create({
   },
   stepNumber: {
     fontSize: 14,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     color: '#64748B',
   },
   activeStepNumber: {
@@ -740,13 +740,13 @@ const styles = StyleSheet.create({
   },
   stepTitle: {
     fontSize: 22,
-    fontFamily: 'Inter-Bold',
+    fontWeight: '700',
     color: '#0F172A',
     marginBottom: 8,
   },
   stepDescription: {
     fontSize: 16,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#64748B',
     marginBottom: 24,
   },
@@ -755,7 +755,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     color: '#0F172A',
     marginBottom: 12,
   },
@@ -778,7 +778,7 @@ const styles = StyleSheet.create({
   },
   uploadOptionText: {
     fontSize: 16,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#3B82F6',
     marginTop: 12,
   },
@@ -801,7 +801,7 @@ const styles = StyleSheet.create({
   },
   changeImageText: {
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#3B82F6',
   },
   noteContainer: {
@@ -821,7 +821,7 @@ const styles = StyleSheet.create({
   noteText: {
     flex: 1,
     fontSize: 14,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#B91C1C',
     lineHeight: 20,
   },
@@ -833,7 +833,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#0F172A',
   },
   textArea: {
@@ -858,13 +858,13 @@ const styles = StyleSheet.create({
   },
   dropdownButtonText: {
     fontSize: 16,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#0F172A',
     marginLeft: 12,
   },
   dropdownPlaceholder: {
     fontSize: 16,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#94A3B8',
   },
   dropdownMenu: {
@@ -900,7 +900,7 @@ const styles = StyleSheet.create({
   },
   dropdownItemText: {
     fontSize: 16,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#0F172A',
     marginLeft: 12,
   },
@@ -921,7 +921,7 @@ const styles = StyleSheet.create({
   },
   dateTimeText: {
     fontSize: 16,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#0F172A',
     marginLeft: 12,
   },
@@ -942,13 +942,13 @@ const styles = StyleSheet.create({
   },
   switchLabel: {
     fontSize: 16,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#0F172A',
     marginBottom: 4,
   },
   switchDescription: {
     fontSize: 14,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#64748B',
   },
   permissionContainer: {
@@ -965,19 +965,19 @@ const styles = StyleSheet.create({
   },
   permissionTitle: {
     fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     color: '#0F172A',
     marginLeft: 8,
   },
   inputLabel: {
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#0F172A',
     marginBottom: 8,
   },
   helperText: {
     fontSize: 14,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#64748B',
     marginTop: 8,
   },
@@ -991,7 +991,7 @@ const styles = StyleSheet.create({
   },
   summaryTitle: {
     fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     color: '#0F172A',
     marginBottom: 16,
   },
@@ -1016,13 +1016,13 @@ const styles = StyleSheet.create({
   },
   summaryPlatformText: {
     fontSize: 16,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#0F172A',
     marginLeft: 8,
   },
   summaryCaption: {
     fontSize: 14,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#334155',
     marginBottom: 8,
   },
@@ -1032,7 +1032,7 @@ const styles = StyleSheet.create({
   },
   summaryScheduleText: {
     fontSize: 12,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#64748B',
     marginLeft: 4,
   },
@@ -1062,7 +1062,7 @@ const styles = StyleSheet.create({
   },
   nextButtonText: {
     fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     color: '#FFFFFF',
   },
   submitButtonContent: {
@@ -1076,7 +1076,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#64748B',
     marginTop: 12,
   },
@@ -1085,7 +1085,7 @@ const styles = StyleSheet.create({
   },
   suggestedContactsTitle: {
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#0F172A',
     marginBottom: 12,
   },
@@ -1125,17 +1125,17 @@ const styles = StyleSheet.create({
   },
   contactAvatarText: {
     fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     color: '#64748B',
   },
   contactName: {
     fontSize: 16,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#0F172A',
   },
   contactEmail: {
     fontSize: 14,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#64748B',
   },
 });

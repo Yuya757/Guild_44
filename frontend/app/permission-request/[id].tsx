@@ -4,8 +4,24 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import { ArrowLeft, Calendar, Clock, Instagram, Twitter, Check, X } from 'lucide-react-native';
 
+// Define types
+type PlatformType = 'instagram' | 'twitter';
+type StatusType = 'approved' | 'pending' | 'denied';
+
+interface PermissionRequest {
+  id: string;
+  image: string;
+  caption: string;
+  scheduledDate: string;
+  scheduledTime: string;
+  platform: PlatformType;
+  status: StatusType;
+  requester: string;
+  requesterEmail: string;
+}
+
 // モックデータ: 許可リクエスト
-const MOCK_PERMISSION_REQUESTS = {
+const MOCK_PERMISSION_REQUESTS: Record<string, PermissionRequest> = {
   '1': {
     id: '1',
     image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&auto=format&q=80',
@@ -32,7 +48,8 @@ const MOCK_PERMISSION_REQUESTS = {
 
 export default function PermissionRequestScreen() {
   const { id } = useLocalSearchParams();
-  const request = MOCK_PERMISSION_REQUESTS[id as string];
+  const requestId = typeof id === 'string' ? id : Array.isArray(id) ? id[0] : '';
+  const request = MOCK_PERMISSION_REQUESTS[requestId];
   
   if (!request) {
     return (
@@ -54,7 +71,7 @@ export default function PermissionRequestScreen() {
     );
   }
 
-  const getPlatformIcon = (platform) => {
+  const getPlatformIcon = (platform: PlatformType) => {
     switch (platform) {
       case 'instagram':
         return <Instagram size={24} color="#E1306C" />;
@@ -65,7 +82,7 @@ export default function PermissionRequestScreen() {
     }
   };
 
-  const getPlatformName = (platform) => {
+  const getPlatformName = (platform: PlatformType) => {
     switch (platform) {
       case 'instagram':
         return 'Instagram';
@@ -224,7 +241,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     color: '#0F172A',
   },
   placeholder: {
@@ -253,7 +270,7 @@ const styles = StyleSheet.create({
   },
   platformText: {
     fontSize: 16,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#0F172A',
     marginLeft: 8,
   },
@@ -262,13 +279,13 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     color: '#0F172A',
     marginBottom: 12,
   },
   captionText: {
     fontSize: 16,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#334155',
     lineHeight: 24,
   },
@@ -289,7 +306,7 @@ const styles = StyleSheet.create({
   },
   scheduleText: {
     fontSize: 14,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#0F172A',
     marginLeft: 8,
   },
@@ -300,12 +317,12 @@ const styles = StyleSheet.create({
   infoLabel: {
     width: 60,
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#64748B',
   },
   infoValue: {
     fontSize: 14,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#0F172A',
   },
   noteContainer: {
@@ -318,7 +335,7 @@ const styles = StyleSheet.create({
   },
   noteText: {
     fontSize: 14,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#854D0E',
     lineHeight: 20,
   },
@@ -358,7 +375,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     color: '#FFFFFF',
     marginLeft: 8,
   },
@@ -370,7 +387,7 @@ const styles = StyleSheet.create({
   },
   notFoundText: {
     fontSize: 18,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#64748B',
     marginBottom: 16,
   },

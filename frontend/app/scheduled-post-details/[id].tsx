@@ -478,7 +478,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     color: '#0F172A'
   },
   shareButton: {
@@ -549,7 +549,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 14,
-    fontFamily: 'Inter-SemiBold'
+    fontWeight: '600'
   },
   detailsContainer: {
     padding: 20
@@ -567,7 +567,7 @@ const styles = StyleSheet.create({
   },
   caption: {
     fontSize: 16,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#0F172A',
     lineHeight: 24,
     marginBottom: 16
@@ -587,7 +587,7 @@ const styles = StyleSheet.create({
   },
   scheduleText: {
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#0F172A',
     marginLeft: 8
   },
@@ -599,7 +599,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     color: '#0F172A'
   },
   toggleButton: {
@@ -610,7 +610,7 @@ const styles = StyleSheet.create({
   },
   toggleButtonText: {
     fontSize: 12,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#3B82F6'
   },
   permissionSummary: {
@@ -632,12 +632,12 @@ const styles = StyleSheet.create({
   },
   countText: {
     fontSize: 16,
-    fontFamily: 'Inter-Bold',
+    fontWeight: '700',
     color: '#FFFFFF'
   },
   countLabel: {
     fontSize: 12,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#64748B'
   },
   permissionsList: {
@@ -656,13 +656,13 @@ const styles = StyleSheet.create({
   },
   permissionName: {
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#0F172A',
     marginBottom: 2
   },
   permissionEmail: {
     fontSize: 12,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#64748B'
   },
   permissionStatus: {
@@ -672,7 +672,7 @@ const styles = StyleSheet.create({
   },
   permissionStatusText: {
     fontSize: 12,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     marginLeft: 4
   },
   reminderButton: {
@@ -685,7 +685,7 @@ const styles = StyleSheet.create({
   },
   reminderButtonText: {
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#3B82F6'
   },
   settingItem: {
@@ -698,7 +698,7 @@ const styles = StyleSheet.create({
   },
   settingLabel: {
     fontSize: 14,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#64748B'
   },
   settingValue: {
@@ -707,7 +707,7 @@ const styles = StyleSheet.create({
   },
   settingText: {
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
     color: '#0F172A',
     marginLeft: 8
   },
@@ -723,7 +723,7 @@ const styles = StyleSheet.create({
   },
   postNowButtonText: {
     fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     color: '#FFFFFF'
   },
   buttonRow: {
@@ -742,7 +742,7 @@ const styles = StyleSheet.create({
   },
   editButtonText: {
     fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     color: '#3B82F6',
     marginLeft: 8
   },
@@ -758,7 +758,7 @@ const styles = StyleSheet.create({
   },
   deleteButtonText: {
     fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     color: '#EF4444',
     marginLeft: 8
   },
@@ -770,7 +770,7 @@ const styles = StyleSheet.create({
   },
   notFoundText: {
     fontSize: 16,
-    fontFamily: 'Inter-Regular',
+    fontWeight: '400',
     color: '#0F172A',
     marginBottom: 16
   },
@@ -782,7 +782,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
     color: '#FFFFFF'
   }
 });
