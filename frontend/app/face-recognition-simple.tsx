@@ -10,7 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { 
   ArrowLeft, 
   Camera, 
@@ -45,16 +45,49 @@ const getMimeType = async (uri: string) => {
 };
 
 export default function FaceRecognitionSimpleScreen() {
-  const [imageUri, setImageUri] = useState<string | null>(null);
+  // ルートパラメータを取得
+  const params = useLocalSearchParams();
+  const returnTo = params.returnTo as string;
+  const initialImageUri = params.imageUri as string;
+  
+  const [imageUri, setImageUri] = useState<string | null>(initialImageUri || null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [recognitionResult, setRecognitionResult] = useState<any>(null);
   const [suggestedEmails, setSuggestedEmails] = useState<string[]>([]);
   const [faceCoordinates, setFaceCoordinates] = useState<any[]>([]);
   const [detectionsVisible, setDetectionsVisible] = useState(true);
   
-  // テスト画像をrequireするコードは削除し、使用しない
-  // ImagePickerを使用して画像を選択するため、アセットのプリロードは不要
+  // 初期画像がある場合は自動的に処理
+  useEffect(() => {
+    if (initialImageUri) {
+      processImage(initialImageUri);
+    }
+  }, [initialImageUri]);
   
+  // 結果を前の画面に返す
+  const returnResults = () => {
+    if (!returnTo) {
+      router.back();
+      return;
+    }
+    
+    // 検出された顔の情報から連絡先データを作成
+    const contacts = suggestedEmails.map((email, index) => ({
+      id: `face-${index}`,
+      name: `検出された人物 ${index + 1}`,
+      email: email,
+      avatarUrl: imageUri
+    }));
+    
+    // 前の画面に戻る
+    router.push({
+      pathname: returnTo as any,
+      params: {
+        recognizedFaces: JSON.stringify(contacts)
+      }
+    });
+  };
+
   // 写真を選択
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -369,6 +402,15 @@ export default function FaceRecognitionSimpleScreen() {
                 <Text style={styles.detailsButtonText}>詳細を表示</Text>
               </TouchableOpacity>
             )}
+            
+            {returnTo && (
+              <TouchableOpacity
+                style={styles.returnButton}
+                onPress={returnResults}
+              >
+                <Text style={styles.returnButtonText}>結果を使用して戻る</Text>
+              </TouchableOpacity>
+            )}
           </View>
         )}
         
@@ -607,5 +649,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     color: '#B91C1C',
+  },
+  returnButton: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+  },
+  returnButtonText: {
+    color: '#6B7280',
+    fontWeight: '500',
   },
 });
