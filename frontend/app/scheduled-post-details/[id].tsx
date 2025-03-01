@@ -268,7 +268,10 @@ export default function ScheduledPostDetailsScreen() {
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.imageContainer}>
-          <Image source={{ uri: post.image }} style={styles.image} />
+          <Image 
+            source={typeof post.image === 'string' ? { uri: post.image } : post.image} 
+            style={styles.image} 
+          />
           
           <View style={styles.platformBadge}>
             {getPlatformIcon(post.platform)}
@@ -291,7 +294,7 @@ export default function ScheduledPostDetailsScreen() {
 
         <View style={styles.detailsContainer}>
           <Animated.View 
-            entering={FadeIn}
+            entering={FadeIn.duration(400)}
             style={styles.section}
           >
             <Text style={styles.caption}>{post.caption}</Text>
@@ -309,7 +312,7 @@ export default function ScheduledPostDetailsScreen() {
           </Animated.View>
 
           <Animated.View 
-            entering={FadeInDown.delay(100)}
+            entering={FadeInDown.delay(100).duration(400)}
             style={styles.section}
           >
             <View style={styles.sectionHeader}>
@@ -329,7 +332,7 @@ export default function ScheduledPostDetailsScreen() {
                 {post.permissions.map((permission: any, index: number) => (
                   <Animated.View 
                     key={permission.email}
-                    entering={FadeInDown.delay(index * 100)}
+                    entering={FadeInDown.delay(index * 100).duration(400)}
                     style={styles.permissionItem}
                   >
                     <View style={styles.permissionInfo}>
@@ -390,7 +393,7 @@ export default function ScheduledPostDetailsScreen() {
           </Animated.View>
 
           <Animated.View 
-            entering={FadeInDown.delay(200)}
+            entering={FadeInDown.delay(200).duration(400)}
             style={styles.section}
           >
             <Text style={styles.sectionTitle}>投稿設定</Text>
@@ -415,7 +418,7 @@ export default function ScheduledPostDetailsScreen() {
           </Animated.View>
 
           <Animated.View 
-            entering={FadeInDown.delay(300)}
+            entering={FadeInDown.delay(300).duration(400)}
             style={styles.actionButtons}
           >
             {canPost && (

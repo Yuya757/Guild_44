@@ -7,7 +7,7 @@ import { ArrowLeft, Calendar, Clock, Download, Share2, MessageCircle, TriangleAl
 // Define base request interface and specific status interfaces
 interface BaseRequest {
   id: string;
-  image: string;
+  image: string | number;  // 文字列URLとrequire()の両方に対応
   title: string;
   owner: string;
   ownerEmail: string;
@@ -60,7 +60,7 @@ const MOCK_REQUESTS: Record<string, Request> = {
   },
   '2': {
     id: '2',
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&q=80',
+    image: require('../../../frontend/assets/images/birthday.jpg'),
     title: '誕生日パーティー',
     owner: '佐藤 太郎',
     ownerEmail: 'taro.sato@example.com',
@@ -292,16 +292,12 @@ export default function RequestDetailsScreen() {
           <ArrowLeft size={20} {...{color: "#0F172A"} as any} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>申請詳細</Text>
-        <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
-          <Share2 size={20} {...{color: "#FFFFFF"} as any} />
-          <Text style={styles.shareButtonText}>共有</Text>
-        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.imageContainer}>
           <Image
-            source={{ uri: localRequest.image }}
+            source={typeof localRequest.image === 'string' ? { uri: localRequest.image } : localRequest.image}
             style={styles.image}
             resizeMode="cover"
           />
@@ -317,7 +313,7 @@ export default function RequestDetailsScreen() {
             style={styles.editPhotoButton}
             onPress={() => router.push({
               pathname: '/photo-editor',
-              params: { imageUri: localRequest.image }
+              params: { imageUri: typeof localRequest.image === 'string' ? localRequest.image : '' }
             })}
           >
             <Text style={styles.editPhotoButtonText}>顔を隠す</Text>
