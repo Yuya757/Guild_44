@@ -21,9 +21,9 @@ interface FaceRecognitionResponse {
  */
 export async function recognizeFacesFromImage(base64Image: string): Promise<FaceRecognitionResponse> {
   try {
-    // Get the API URL and key from environment variables or Constants
-    const apiUrl = Constants.expoConfig?.extra?.apiUrl || 'https://62az2hs957.execute-api.ap-northeast-1.amazonaws.com/prod/search';
-    const apiKey = Constants.expoConfig?.extra?.apiKey || 'dSOovEKqYwgehvBr24g57tWpqJn1DfManBOt1WXd';
+    // Get the API URL and key from Constants
+    const apiUrl = Constants.expoConfig?.extra?.apiUrl;
+    const apiKey = Constants.expoConfig?.extra?.apiKey;
 
     console.log('API URL:', apiUrl);
     console.log('Base64 image length:', base64Image ? base64Image.length : 0);
