@@ -12,7 +12,7 @@ type StatusType = 'approved' | 'pending' | 'denied' | string;
 
 type RequestItem = {
   id: string;
-  image: string;
+  image: string | number;  // Updated to accept both string and number (for require)
   title: string;
   owner: string;
   purpose?: string;
@@ -25,7 +25,7 @@ type RequestItem = {
 
 type ScheduledPostItem = {
   id: string;
-  image: string;
+  image: string | number;  // Updated to accept both string and number (for require)
   caption: string;
   scheduledDate: string;
   scheduledTime: string;
@@ -48,7 +48,7 @@ const MOCK_REQUESTS = [
   },
   {
     id: '2',
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&q=80',
+    image: require('../../../frontend/assets/images/birthday.jpg'),
     title: '誕生日パーティー',
     owner: '佐藤 太郎',
     status: 'pending',
@@ -208,7 +208,7 @@ export default function HomeScreen() {
       >
         <View style={styles.imageContainer}>
           <Image
-            source={{ uri: item.image }}
+            source={typeof item.image === 'string' ? { uri: item.image } : item.image}
             style={styles.requestImage}
           />
           <TouchableOpacity 
@@ -258,7 +258,7 @@ export default function HomeScreen() {
         onPress={() => router.push(`/scheduled-post-details/${item.id}`)}
       >
         <Image
-          source={{ uri: item.image }}
+          source={typeof item.image === 'string' ? { uri: item.image } : item.image}
           style={styles.scheduledPostImage}
         />
         <View style={styles.scheduledPostOverlay}>
