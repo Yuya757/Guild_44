@@ -104,9 +104,15 @@ export default function FaceRecognitionSimpleScreen() {
     try {
       setIsProcessing(true);
       
-      // テスト画像を使用（画像ピッカーを起動する代わりに）
-      // この例では、アプリ内のサンプル画像をテスト用として使用
-      const testImageUri = 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&auto=format&q=80';
+      // assets/images内のtest-image.jpgを強制的に読み込む
+      const testImage = require('../assets/images/test-image.jpg');
+      
+      // Asset.fromModuleを使用してローカルアセットのURIを取得
+      const asset = Asset.fromModule(testImage);
+      await asset.downloadAsync();
+      
+      const testImageUri = asset.localUri || asset.uri;
+      console.log('Loading test image from:', testImageUri);
       
       setImageUri(testImageUri);
       setRecognitionResult(null);
@@ -452,7 +458,7 @@ export default function FaceRecognitionSimpleScreen() {
             >
               <Upload size={20} {...{color: "#3B82F6"} as any} />
               <Text style={[styles.buttonText, styles.secondaryButtonText]}>
-                テスト画像を使用
+                テスト画像を読み込む
               </Text>
             </TouchableOpacity>
             
