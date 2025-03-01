@@ -377,16 +377,16 @@ export default function RequestDetailsScreen() {
           {canChangeStatus() && !localRequest.isMyRequest && (
             <View style={styles.actionButtonsContainer}>
               <TouchableOpacity
-                style={[styles.actionButton, styles.approveButton]}
-                onPress={() => handleChangeStatus('approved')}
-              >
-                <Text style={styles.actionButtonText}>承認する</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
                 style={[styles.actionButton, styles.denyButton]}
                 onPress={() => handleChangeStatus('denied')}
               >
                 <Text style={styles.actionButtonText}>却下する</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionButton, styles.approveButton]}
+                onPress={() => handleChangeStatus('approved')}
+              >
+                <Text style={styles.actionButtonText}>承認する</Text>
               </TouchableOpacity>
             </View>
           )}

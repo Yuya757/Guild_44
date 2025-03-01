@@ -101,24 +101,25 @@ export default function FaceRecognitionSimpleScreen() {
 
   // 写真を選択
   const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: false,
-      quality: 1,
-    });
-
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      setImageUri(result.assets[0].uri);
+    try {
+      setIsProcessing(true);
+      
+      // テスト画像を使用（画像ピッカーを起動する代わりに）
+      // この例では、アプリ内のサンプル画像をテスト用として使用
+      const testImageUri = 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&auto=format&q=80';
+      
+      setImageUri(testImageUri);
       setRecognitionResult(null);
       setSuggestedEmails([]);
       setFaceCoordinates([]);
       
-      try {
-        await processImage(result.assets[0].uri); // await を追加
-      } catch (error) {
-        console.error('Error processing image:', error);
-        Alert.alert('エラー', '画像の処理中にエラーが発生しました。');
-      }
+      // テスト画像を処理
+      await processImage(testImageUri);
+    } catch (error) {
+      console.error('Error loading test image:', error);
+      Alert.alert('エラー', 'テスト画像の読み込み中にエラーが発生しました。');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -365,7 +366,7 @@ export default function FaceRecognitionSimpleScreen() {
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <ArrowLeft size={24} color="#0F172A" />
+          <ArrowLeft size={24} {...{color: "#0F172A"} as any} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>顔認識</Text>
         <View style={{ width: 40 }} />
@@ -384,7 +385,7 @@ export default function FaceRecognitionSimpleScreen() {
             </View>
           ) : (
             <View style={styles.placeholderContainer}>
-              <Camera size={48} color="#94A3B8" />
+              <Camera size={48} {...{color: "#94A3B8"} as any} />
               <Text style={styles.placeholderText}>
                 カメラで撮影するか、画像をアップロードしてください
               </Text>
@@ -398,7 +399,7 @@ export default function FaceRecognitionSimpleScreen() {
                 style={styles.controlButton}
                 onPress={toggleStampedImage}
               >
-                <ImageIcon size={24} color="#3B82F6" />
+                <ImageIcon size={24} {...{color: "#3B82F6"} as any} />
                 <Text style={styles.controlButtonText}>
                   {detectionsVisible ? 'スタンプを非表示' : 'スタンプを表示'}
                 </Text>
@@ -427,7 +428,7 @@ export default function FaceRecognitionSimpleScreen() {
               </Text>
               {suggestedEmails.map((email, index) => (
                 <View key={`email-${index}`} style={styles.emailItem}>
-                  <Mail size={16} color="#3B82F6" />
+                  <Mail size={16} {...{color: "#3B82F6"} as any} />
                   <Text style={styles.emailText}>{email}</Text>
                 </View>
               ))}
@@ -449,9 +450,9 @@ export default function FaceRecognitionSimpleScreen() {
               style={[styles.button, styles.secondaryButton]}
               onPress={pickImage}
             >
-              <Upload size={20} color="#3B82F6" />
+              <Upload size={20} {...{color: "#3B82F6"} as any} />
               <Text style={[styles.buttonText, styles.secondaryButtonText]}>
-                画像を選択
+                テスト画像を使用
               </Text>
             </TouchableOpacity>
             
@@ -459,7 +460,7 @@ export default function FaceRecognitionSimpleScreen() {
               style={[styles.button, styles.primaryButton]}
               onPress={takePhoto}
             >
-              <Camera size={20} color="#FFFFFF" />
+              <Camera size={20} {...{color: "#FFFFFF"} as any} />
               <Text style={[styles.buttonText, styles.primaryButtonText]}>
                 カメラで撮影
               </Text>
