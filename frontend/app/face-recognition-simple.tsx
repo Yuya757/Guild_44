@@ -18,7 +18,8 @@ import {
   Check, 
   AlertOctagon, 
   Mail,
-  Beaker
+  Beaker,
+  Image as ImageIcon,
 } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
@@ -56,6 +57,16 @@ export default function FaceRecognitionSimpleScreen() {
   const [suggestedEmails, setSuggestedEmails] = useState<string[]>([]);
   const [faceCoordinates, setFaceCoordinates] = useState<any[]>([]);
   const [detectionsVisible, setDetectionsVisible] = useState(true);
+  const [stampedImage, setStampedImage] = useState<string | null>(null);
+  
+  // Available stamp options
+  const [selectedStamp, setSelectedStamp] = useState<number>(0);
+  const stamps = [
+    require('../assets/stamps/star.png'),
+    require('../assets/stamps/heart.png'),
+    require('../assets/stamps/smile.png'),
+    require('../assets/stamps/crown.png'),
+  ];
   
   // 初期画像がある場合は自動的に処理
   useEffect(() => {
@@ -189,6 +200,10 @@ export default function FaceRecognitionSimpleScreen() {
     
     try {
       setIsProcessing(true);
+      setImageUri(uri);
+      setSuggestedEmails([]);
+      setFaceCoordinates([]);
+      setStampedImage(null);
       
       // ファイル情報の取得
       console.log('Checking file at URI:', uri);
@@ -200,6 +215,16 @@ export default function FaceRecognitionSimpleScreen() {
       }
       
       console.log('File exists, size:', fileInfo.size);
+      
+      // 画像サイズの確認 - 10MB以上の場合は警告
+      if (fileInfo.size && fileInfo.size > 10 * 1024 * 1024) {
+        Alert.alert(
+          '画像サイズが大きすぎます',
+          '10MB以下の画像を選択してください。大きな画像はAPIエラーの原因となる可能性があります。'
+        );
+        setIsProcessing(false);
+        return;
+      }
       
       // MIMEタイプを取得
       const mimeType = await getMimeType(uri);
@@ -219,20 +244,33 @@ export default function FaceRecognitionSimpleScreen() {
       
       // 顔認識APIを呼び出し
       console.log('Calling face recognition API...');
-      const response = await recognizeFacesFromImage(`data:${mimeType};base64,${base64Image}`);
-      setRecognitionResult(response);
+      const result = await recognizeFacesFromImage(`data:${mimeType};base64,${base64Image}`);
+      setRecognitionResult(result);
       
-      if (response.status === 'success' && response.faces.length > 0) {
-        console.log('Faces detected:', response.faces.length);
+      if (result.status === 'success' && result.faces.length > 0) {
+        console.log('Faces detected:', result.faces.length);
         // メールアドレスの提案を取得
-        const emails = getSuggestedEmails(response.faces);
+        const emails = getSuggestedEmails(result.faces);
         setSuggestedEmails(emails);
         
         // 顔の座標を取得
-        const coordinates = getFaceCoordinates(response.faces);
+        const coordinates = getFaceCoordinates(result.faces);
         setFaceCoordinates(coordinates);
+        
+        // Apply stamps to the detected faces
+        await applyStampsToFaces(uri, coordinates);
+        
+        // Show success feedback
+        Alert.alert(
+          '顔認識完了', 
+          `${coordinates.length}人の顔を検出しました。${emails.length}人のメールアドレスが見つかりました。`
+        );
       } else {
         console.log('No faces detected or API returned error');
+        Alert.alert(
+          '顔認識失敗', 
+          '画像から顔を検出できませんでした。別の画像を試してください。'
+        );
       }
       
     } catch (error) {
@@ -253,25 +291,71 @@ export default function FaceRecognitionSimpleScreen() {
     }
   };
 
+  // 顔の上にスタンプを適用する関数
+  const applyStampsToFaces = async (imageUri: string, faceCoordinates: any[]) => {
+    try {
+      // Note: In a real implementation, you would use a library like react-native-image-editor
+      // or send the image to a server for processing.
+      
+      // For this prototype, we'll simulate the stamping by showing the original image
+      // with overlay stamps in the UI
+      setStampedImage(imageUri);
+      
+      // In a real implementation, this function would:
+      // 1. Load the original image
+      // 2. For each face coordinate, overlay a stamp image
+      // 3. Save the modified image and return its URI
+      
+    } catch (error) {
+      console.error('Error applying stamps:', error);
+    }
+  };
+  
+  // Toggle between stamped and original image
+  const toggleStampedImage = () => {
+    setDetectionsVisible(!detectionsVisible);
+  };
+  
+  // Change the selected stamp
+  const nextStamp = () => {
+    setSelectedStamp((prev) => (prev + 1) % stamps.length);
+  };
+  
   // 顔の枠を描画
   const renderFaceBoxes = () => {
-    if (!faceCoordinates.length || !detectionsVisible) return null;
+    if (!detectionsVisible || !imageUri || faceCoordinates.length === 0) {
+      return null;
+    }
     
-    return faceCoordinates.map((face, index) => (
-      <View
-        key={`face-${index}`}
-        style={{
-          position: 'absolute',
-          left: `${face.Left * 100}%`,
-          top: `${face.Top * 100}%`,
-          width: `${face.Width * 100}%`,
-          height: `${face.Height * 100}%`,
-          borderWidth: 2,
-          borderColor: '#10B981',
-          borderRadius: 4,
-        }}
-      />
-    ));
+    return faceCoordinates.map((face, index) => {
+      // Calculate the position and size as numbers between 0-1
+      const left = face.boundingBox.left;
+      const top = face.boundingBox.top;
+      const width = face.boundingBox.width;
+      const height = face.boundingBox.height;
+      
+      return (
+        <View
+          key={`face-${index}`}
+          style={[
+            styles.faceOverlay,
+            {
+              left: `${left * 100}%`,
+              top: `${top * 100}%`,
+              width: `${width * 100}%`,
+              height: `${height * 100}%`,
+            } as any
+          ]}
+        >
+          {/* Display stamp instead of box for the detected face */}
+          <Image
+            source={stamps[selectedStamp]}
+            style={styles.stampImage}
+            resizeMode="contain"
+          />
+        </View>
+      );
+    });
   };
 
   return (
@@ -281,153 +365,119 @@ export default function FaceRecognitionSimpleScreen() {
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <ArrowLeft size={20} {...{color: "#0F172A"} as any} />
+          <ArrowLeft size={24} color="#0F172A" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>顔認識テスト</Text>
+        <Text style={styles.headerTitle}>顔認識</Text>
         <View style={{ width: 40 }} />
       </View>
 
       <ScrollView style={styles.content}>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>テスト方法</Text>
-          <Text style={styles.instructionText}>
-            1. 写真を撮影するか選択してください{'\n'}
-            2. 自動的に顔認識を行います{'\n'}
-            3. 検出された顔とメールアドレスが表示されます
-          </Text>
-        </View>
-        
-        <View style={styles.imageSection}>
+        <View style={styles.mainContent}>
           {imageUri ? (
-            <View style={styles.imagePreviewContainer}>
+            <View style={styles.imageContainer}>
               <Image
-                source={{ uri: imageUri }}
-                style={styles.imagePreview}
+                source={{ uri: stampedImage || imageUri }}
+                style={styles.selectedImage}
                 resizeMode="contain"
               />
               {renderFaceBoxes()}
-              
-              {isProcessing && (
-                <View style={styles.processingOverlay}>
-                  <ActivityIndicator color="#FFFFFF" size="large" />
-                  <Text style={styles.processingText}>顔を認識中...</Text>
-                </View>
-              )}
-              
-              <TouchableOpacity
-                style={styles.changeImageButton}
-                onPress={() => {
-                  setImageUri(null);
-                  setRecognitionResult(null);
-                  setSuggestedEmails([]);
-                  setFaceCoordinates([]);
-                }}
-              >
-                <Text style={styles.changeImageText}>写真を変更</Text>
-              </TouchableOpacity>
             </View>
           ) : (
-            <View style={styles.uploadOptions}>
+            <View style={styles.placeholderContainer}>
+              <Camera size={48} color="#94A3B8" />
+              <Text style={styles.placeholderText}>
+                カメラで撮影するか、画像をアップロードしてください
+              </Text>
+            </View>
+          )}
+          
+          {/* コントロールパネル */}
+          {imageUri && (
+            <View style={styles.controlPanel}>
               <TouchableOpacity
-                style={styles.uploadOption}
-                onPress={takePhoto}
+                style={styles.controlButton}
+                onPress={toggleStampedImage}
               >
-                <Camera size={32} {...{color: "#3B82F6"} as any} />
-                <Text style={styles.uploadOptionText}>写真を撮影</Text>
+                <ImageIcon size={24} color="#3B82F6" />
+                <Text style={styles.controlButtonText}>
+                  {detectionsVisible ? 'スタンプを非表示' : 'スタンプを表示'}
+                </Text>
               </TouchableOpacity>
+              
               <TouchableOpacity
-                style={styles.uploadOption}
-                onPress={pickImage}
+                style={styles.controlButton}
+                onPress={nextStamp}
               >
-                <Upload size={32} {...{color: "#3B82F6"} as any} />
-                <Text style={styles.uploadOptionText}>画像を選択</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.uploadOption, styles.testOption]}
-                onPress={useTestImage}
-              >
-                <Beaker size={32} {...{color: "#10B981"} as any} />
-                <Text style={[styles.uploadOptionText, {color: "#10B981"}]}>ギャラリーから選択</Text>
+                <Image
+                  source={stamps[selectedStamp]}
+                  style={styles.stampPreview}
+                />
+                <Text style={styles.controlButtonText}>
+                  スタンプ変更
+                </Text>
               </TouchableOpacity>
             </View>
           )}
-        </View>
-        
-        {suggestedEmails.length > 0 && (
-          <View style={styles.resultSection}>
-            <View style={styles.resultHeader}>
-              <Check size={24} {...{color: "#10B981"} as any} />
-              <Text style={styles.resultTitle}>
-                {suggestedEmails.length}人の顔を検出しました
+          
+          {/* 結果表示 */}
+          {suggestedEmails.length > 0 && (
+            <View style={styles.resultsContainer}>
+              <Text style={styles.resultsTitle}>
+                検出された連絡先 ({suggestedEmails.length})
               </Text>
-            </View>
-            
-            {/* <TouchableOpacity
-              style={styles.toggleButton}
-              onPress={() => setDetectionsVisible(!detectionsVisible)}
-            >
-              <Text style={styles.toggleButtonText}>
-                {detectionsVisible ? '顔の枠を非表示' : '顔の枠を表示'}
-              </Text>
-            </TouchableOpacity> */}
-            
-            {suggestedEmails.length > 0 && (
-              <View style={styles.emailSection}>
-                <View style={styles.emailHeader}>
-                  <Mail size={20} {...{color: "#3B82F6"} as any} />
-                  <Text style={styles.emailHeaderText}>検出されたメールアドレス</Text>
+              {suggestedEmails.map((email, index) => (
+                <View key={`email-${index}`} style={styles.emailItem}>
+                  <Mail size={16} color="#3B82F6" />
+                  <Text style={styles.emailText}>{email}</Text>
                 </View>
-                
-                {suggestedEmails.map((email, index) => (
-                  <View key={`email-${index}`} style={styles.emailItem}>
-                    <Text style={styles.emailText}>{email}</Text>
-                  </View>
-                ))}
-              </View>
-            )}
-            
-            {recognitionResult && (
-              <TouchableOpacity
-                style={styles.detailsButton}
-                onPress={() => 
-                  Alert.alert(
-                    '詳細情報',
-                    `検出顔数: ${faceCoordinates.length}\n` +
-                    `メールアドレス: ${suggestedEmails.length > 0 ? suggestedEmails.join(', ') : 'なし'}\n` +
-                    `ステータス: ${recognitionResult.status}\n` +
-                    `メッセージ: ${recognitionResult.message}`
-                  )
-                }
-              >
-                <Text style={styles.detailsButtonText}>詳細を表示</Text>
-              </TouchableOpacity>
-            )}
-            
-            {returnTo && (
-              <TouchableOpacity
-                style={styles.returnButton}
-                onPress={returnResults}
-              >
-                <Text style={styles.returnButtonText}>結果を使用して戻る</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        )}
-        
-        {recognitionResult && recognitionResult.faces.length === 0 && (
-          <View style={styles.errorResultSection}>
-            <View style={styles.resultHeader}>
-              <AlertOctagon size={24} {...{color: "#EF4444"} as any} />
-              <Text style={styles.errorResultTitle}>
-                顔が検出されませんでした
-              </Text>
+              ))}
             </View>
-            <Text style={styles.errorResultText}>
-              別の写真で試してみてください。顔がはっきり映っている写真が最適です。
-            </Text>
-          </View>
-        )}
+          )}
+        </View>
       </ScrollView>
+      
+      {/* 画像選択・撮影ボタン */}
+      <View style={styles.buttonContainer}>
+        {isProcessing ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#3B82F6" />
+            <Text style={styles.loadingText}>顔認識処理中...</Text>
+          </View>
+        ) : (
+          <>
+            <TouchableOpacity
+              style={[styles.button, styles.secondaryButton]}
+              onPress={pickImage}
+            >
+              <Upload size={20} color="#3B82F6" />
+              <Text style={[styles.buttonText, styles.secondaryButtonText]}>
+                画像を選択
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.button, styles.primaryButton]}
+              onPress={takePhoto}
+            >
+              <Camera size={20} color="#FFFFFF" />
+              <Text style={[styles.buttonText, styles.primaryButtonText]}>
+                カメラで撮影
+              </Text>
+            </TouchableOpacity>
+          </>
+        )}
+      </View>
+      
+      {imageUri && suggestedEmails.length > 0 && (
+        <View style={styles.doneButtonContainer}>
+          <TouchableOpacity
+            style={styles.doneButton}
+            onPress={returnResults}
+          >
+            <Text style={styles.doneButtonText}>認識結果を使用</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -459,91 +509,162 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
-  section: {
+  mainContent: {
+    marginBottom: 20,
+  },
+  imageContainer: {
+    position: 'relative',
+    width: '100%',
+    height: 400,
+    backgroundColor: '#E2E8F0',
+    borderRadius: 12,
+    overflow: 'hidden',
     marginBottom: 16,
+  },
+  selectedImage: {
+    width: '100%',
+    height: '100%',
+  },
+  placeholderContainer: {
+    width: '100%',
+    height: 300,
+    backgroundColor: '#E2E8F0',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    marginBottom: 16,
+  },
+  placeholderText: {
+    textAlign: 'center',
+    marginTop: 12,
+    fontSize: 14,
+    color: '#64748B',
+  },
+  controlPanel: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 16,
+    padding: 16,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  controlButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+  },
+  controlButtonText: {
+    marginLeft: 8,
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#3B82F6',
+  },
+  stampPreview: {
+    width: 24,
+    height: 24,
+  },
+  faceOverlay: {
+    position: 'absolute',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  stampImage: {
+    width: '100%',
+    height: '100%',
+  },
+  resultsContainer: {
+    marginTop: 16,
+    padding: 16,
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
-  sectionTitle: {
-    fontSize: 18,
+  resultsTitle: {
+    fontSize: 16,
     fontWeight: '600',
     color: '#0F172A',
     marginBottom: 12,
   },
-  instructionText: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: '#334155',
-  },
-  imageSection: {
-    marginBottom: 16,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  uploadOptions: {
+  emailItem: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginVertical: 20,
-    flexWrap: 'wrap',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
   },
-  uploadOption: {
+  emailText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: '#0F172A',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 16,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#E2E8F0',
+  },
+  button: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    width: 130,
-    height: 120,
-    backgroundColor: '#F1F5F9',
-    borderRadius: 12,
-    padding: 16,
-    margin: 6,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    flex: 1,
+    marginHorizontal: 4,
   },
-  testOption: {
-    backgroundColor: '#ECFDF5',
+  primaryButton: {
+    backgroundColor: '#3B82F6',
+  },
+  secondaryButton: {
+    backgroundColor: '#EFF6FF',
     borderWidth: 1,
-    borderColor: '#D1FAE5',
+    borderColor: '#BFDBFE',
   },
-  uploadOptionText: {
-    marginTop: 12,
-    fontSize: 15,
+  buttonText: {
+    marginLeft: 8,
     fontWeight: '500',
+    fontSize: 14,
+  },
+  primaryButtonText: {
+    color: '#FFFFFF',
+  },
+  secondaryButtonText: {
     color: '#3B82F6',
-    textAlign: 'center',
   },
-  imagePreviewContainer: {
-    width: '100%',
-    height: 300,
-    borderRadius: 12,
-    overflow: 'hidden',
-    backgroundColor: '#E2E8F0',
-    position: 'relative',
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
   },
-  imagePreview: {
-    width: '100%',
-    height: '100%',
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: '#64748B',
   },
-  changeImageButton: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    padding: 10,
+  doneButtonContainer: {
+    padding: 16,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#E2E8F0',
+  },
+  doneButton: {
+    backgroundColor: '#10B981',
+    borderRadius: 8,
+    paddingVertical: 12,
     alignItems: 'center',
   },
-  changeImageText: {
+  doneButtonText: {
     color: '#FFFFFF',
     fontWeight: '600',
+    fontSize: 16,
   },
   processingOverlay: {
     position: 'absolute',
@@ -551,115 +672,8 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  processingText: {
-    color: '#FFFFFF',
-    marginTop: 8,
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  resultSection: {
-    marginBottom: 16,
-    backgroundColor: '#ECFDF5',
-    borderWidth: 1,
-    borderColor: '#A7F3D0',
-    borderRadius: 12,
-    padding: 16,
-  },
-  resultHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  resultTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#10B981',
-    marginLeft: 8,
-  },
-  toggleButton: {
-    backgroundColor: '#D1FAE5',
-    borderRadius: 8,
-    padding: 10,
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  toggleButtonText: {
-    color: '#047857',
-    fontWeight: '500',
-  },
-  emailSection: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
-  },
-  emailHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  emailHeaderText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#3B82F6',
-    marginLeft: 8,
-  },
-  emailItem: {
-    backgroundColor: '#EFF6FF',
-    borderRadius: 6,
-    padding: 10,
-    marginBottom: 8,
-  },
-  emailText: {
-    fontSize: 14,
-    color: '#2563EB',
-  },
-  detailsButton: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    padding: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-  },
-  detailsButtonText: {
-    color: '#6B7280',
-    fontWeight: '500',
-  },
-  errorResultSection: {
-    marginBottom: 16,
-    backgroundColor: '#FEF2F2',
-    borderWidth: 1,
-    borderColor: '#FECACA',
-    borderRadius: 12,
-    padding: 16,
-  },
-  errorResultTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#EF4444',
-    marginLeft: 8,
-  },
-  errorResultText: {
-    marginTop: 8,
-    fontSize: 14,
-    lineHeight: 20,
-    color: '#B91C1C',
-  },
-  returnButton: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    padding: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-  },
-  returnButtonText: {
-    color: '#6B7280',
-    fontWeight: '500',
   },
 });
