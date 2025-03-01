@@ -196,19 +196,19 @@ export default function PermissionRequestScreen() {
 
           <View style={styles.actionButtons}>
             <TouchableOpacity
-              style={styles.denyButton}
-              onPress={handleDeny}
-            >
-              <X size={20} {...{color: "#FFFFFF"} as any} />
-              <Text style={styles.buttonText}>却下する</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
               style={styles.approveButton}
               onPress={handleApprove}
             >
               <Check size={20} {...{color: "#FFFFFF"} as any} />
               <Text style={styles.buttonText}>承認する</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={styles.denyButton}
+              onPress={handleDeny}
+            >
+              <X size={20} {...{color: "#FFFFFF"} as any} />
+              <Text style={styles.buttonText}>却下する</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#10B981',
     borderRadius: 12,
     paddingVertical: 16,
-    marginLeft: 8,
+    marginRight: 8,
     shadowColor: '#10B981',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#EF4444',
     borderRadius: 12,
     paddingVertical: 16,
-    marginRight: 8,
+    marginLeft: 8,
     shadowColor: '#EF4444',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
