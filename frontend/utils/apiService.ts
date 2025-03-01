@@ -25,24 +25,39 @@ export async function recognizeFacesFromImage(base64Image: string): Promise<Face
     const apiUrl = Constants.expoConfig?.extra?.apiUrl || 'https://62az2hs957.execute-api.ap-northeast-1.amazonaws.com/prod/search';
     const apiKey = Constants.expoConfig?.extra?.apiKey || 'dSOovEKqYwgehvBr24g57tWpqJn1DfManBOt1WXd';
 
+    console.log('API URL:', apiUrl);
+    console.log('Base64 image length:', base64Image ? base64Image.length : 0);
+    
+    if (!base64Image || base64Image.length < 100) {
+      throw new Error('画像データが不正または不足しています');
+    }
+
+    const requestData = {
+      image_base64str: base64Image,
+      threshold: 80.0
+    };
+    
+    console.log('Sending request to face recognition API...');
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': apiKey
       },
-      body: JSON.stringify({
-        image_base64str: base64Image,
-        threshold: 80.0
-      })
+      body: JSON.stringify(requestData)
     });
 
+    console.log('API response status:', response.status);
+    
     if (!response.ok) {
       const errorText = await response.text();
+      console.error('API error response:', errorText);
       throw new Error(`API request failed: ${response.status} ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('API response data type:', typeof data);
+    
     return typeof data === 'string' ? JSON.parse(data) : data;
   } catch (error) {
     console.error('Face recognition API error:', error);

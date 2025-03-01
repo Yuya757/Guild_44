@@ -14,6 +14,7 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
   ActivityIndicator,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -27,6 +28,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { Asset } from 'expo-asset';
 import { recognizeFacesFromImage, getSuggestedEmails, getFaceCoordinates } from '../utils/apiService';
+import { Calendar as CalendarPicker } from 'react-native-calendars';
 
 const { width } = Dimensions.get('window');
 
@@ -107,8 +109,10 @@ export default function CreateScheduledPostScreen() {
 
   // 日付と時間の選択
   const [date, setDate] = useState<Date>(new Date());
-  const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
-  const [showTimePicker, setShowTimePicker] = useState<boolean>(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [selectedHour, setSelectedHour] = useState(new Date().getHours());
+  const [selectedMinute, setSelectedMinute] = useState(new Date().getMinutes());
 
   // 許可申請関連
   const [requirePermission, setRequirePermission] = useState<boolean>(true);
@@ -132,6 +136,10 @@ export default function CreateScheduledPostScreen() {
   const [detectionsVisible, setDetectionsVisible] = useState<boolean>(true);
   const [recognitionResult, setRecognitionResult] = useState<any>(null);
 
+  // For facial recognition
+  const [isLoading, setIsLoading] = useState(false);
+  const [recognizedContacts, setRecognizedContacts] = useState<ContactType[]>([]);
+
   // When selected contacts change, update the permission emails
   useEffect(() => {
     if (selectedContacts.length > 0) {
@@ -147,6 +155,7 @@ export default function CreateScheduledPostScreen() {
     }
     
     try {
+      setIsLoading(true);
       setRecognizingFace(true);
       setProcessingImage(true);
       
@@ -210,7 +219,7 @@ export default function CreateScheduledPostScreen() {
           
           return {
             id: `face-${index}`,
-            name: email.includes('reina') ? '澄玲奈' : 
+            name: email.includes('reina') ? '鷲見玲奈' : 
                  email.includes('hikakin') ? 'ヒカキン' : 
                  `検出された人物 ${index + 1}`,
             email: email,
@@ -229,12 +238,19 @@ export default function CreateScheduledPostScreen() {
           '顔認識完了',
           `画像から${contacts.length}人の連絡先が見つかりました。`
         );
+
+        setRecognizedContacts(contacts);
+        setSelectedContacts(contacts.slice(0, 2)); // Automatically select the first two contacts
       } else {
         console.log('No faces detected or API returned error');
         Alert.alert(
           '顔認識結果',
           '画像から顔を検出できませんでした。別の画像を試してください。'
         );
+
+        setRecognizedContacts(SAMPLE_CONTACTS);
+        setSelectedContacts([]);
+        setFaceCoordinates([]);
       }
       
     } catch (error) {
@@ -250,9 +266,14 @@ export default function CreateScheduledPostScreen() {
           '顔認識処理中に不明なエラーが発生しました。再度お試しください。'
         );
       }
+
+      setRecognizedContacts(SAMPLE_CONTACTS);
+      setSelectedContacts([]);
+      setFaceCoordinates([]);
     } finally {
       setRecognizingFace(false);
       setProcessingImage(false);
+      setIsLoading(false);
     }
   };
 
@@ -436,22 +457,38 @@ export default function CreateScheduledPostScreen() {
 
   // Handle date and time changes
   const handleDateChange = () => {
-    // Show date picker dialog or use a custom UI
-    Alert.alert('日付選択', '実際のアプリでは日付選択UIが表示されます');
-    // For demo purposes, just add one day to the current date
+    // Show the calendar picker
+    setShowDatePicker(true);
+  };
+
+  const onDateSelected = (day: any) => {
+    setShowDatePicker(false);
+    // Create a new date with the selected day but preserve current time
     const newDate = new Date(date);
-    newDate.setDate(newDate.getDate() + 1);
+    const selectedDate = new Date(day.dateString);
+    newDate.setFullYear(selectedDate.getFullYear());
+    newDate.setMonth(selectedDate.getMonth());
+    newDate.setDate(selectedDate.getDate());
     setDate(newDate);
   };
 
   const handleTimeChange = () => {
-    // Show time picker dialog or use a custom UI
-    Alert.alert('時間選択', '実際のアプリでは時間選択UIが表示されます');
-    // For demo purposes, just add one hour to the current time
+    // Show the time picker
+    setShowTimePicker(true);
+  };
+
+  const onTimeSelected = () => {
+    setShowTimePicker(false);
+    // Create a new date with the selected time but preserve current date
     const newDate = new Date(date);
-    newDate.setHours(newDate.getHours() + 1);
+    newDate.setHours(selectedHour);
+    newDate.setMinutes(selectedMinute);
     setDate(newDate);
   };
+
+  // 時間ピッカー用の時間と分の配列を生成
+  const hours = Array.from({ length: 24 }, (_, i) => i);
+  const minutes = Array.from({ length: 60 }, (_, i) => i);
 
   const formatDate = (date: Date) => {
     return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
@@ -549,12 +586,192 @@ export default function CreateScheduledPostScreen() {
   );
 
   const renderStep2 = () => (
-    <Animated.View entering={FadeIn} style={styles.stepContainer}>
-      <Text style={styles.stepTitle}>投稿内容</Text>
-      <Text style={styles.stepDescription}>
-        投稿の詳細情報を入力してください
-      </Text>
+    <View style={styles.stepContainer}>
+      <Text style={styles.stepTitle}>投稿の詳細を設定</Text>
+      
+      {/* Platform selection */}
+      <View style={styles.formGroup}>
+        <Text style={styles.label}>プラットフォーム</Text>
+        <TouchableOpacity
+          style={styles.dropdownButton}
+          onPress={() => setShowPlatformDropdown(!showPlatformDropdown)}
+        >
+          <View style={styles.selectedOptionContainer}>
+            {platform ? (
+              <View style={styles.platformIconWrapper}>
+                {getPlatformIcon(platform)}
+              </View>
+            ) : null}
+            <Text style={styles.selectedOption}>
+              {platform ? getPlatformName(platform) : 'プラットフォームを選択'}
+            </Text>
+          </View>
+          <ChevronDown size={20} color="#64748B" />
+        </TouchableOpacity>
+        
+        {showPlatformDropdown && (
+          <View style={styles.dropdownMenu}>
+            {PLATFORMS.map((platform) => (
+              <TouchableOpacity
+                key={platform}
+                style={styles.dropdownItem}
+                onPress={() => {
+                  selectPlatform(platform);
+                  setShowPlatformDropdown(false);
+                }}
+              >
+                <View style={styles.platformIconWrapper}>
+                  {getPlatformIcon(platform)}
+                </View>
+                <Text style={styles.dropdownItemText}>{getPlatformName(platform)}</Text>
+                {platform === platform && (
+                  <Check size={20} color="#3B82F6" />
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+      </View>
+      
+      {/* Date and time selection */}
+      <View style={styles.formGroup}>
+        <Text style={styles.label}>投稿日時</Text>
+        <View style={styles.dateTimeContainer}>
+          <TouchableOpacity
+            style={styles.dateTimeButton}
+            onPress={handleDateChange}
+          >
+            <Calendar size={20} color="#3B82F6" />
+            <Text style={styles.dateTimeButtonText}>{formatDate(date)}</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={styles.dateTimeButton}
+            onPress={handleTimeChange}
+          >
+            <Clock size={20} color="#3B82F6" />
+            <Text style={styles.dateTimeButtonText}>{formatTime(date)}</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
 
+      {/* Calendar Modal for Date Selection */}
+      <Modal
+        visible={showDatePicker}
+        transparent={true}
+        animationType="fade"
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.calendarContainer}>
+            <Text style={styles.modalTitle}>日付を選択</Text>
+            
+            <CalendarPicker
+              onDayPress={onDateSelected}
+              markedDates={{
+                [date.toISOString().split('T')[0]]: { selected: true, selectedColor: '#3B82F6' }
+              }}
+              theme={{
+                backgroundColor: '#ffffff',
+                calendarBackground: '#ffffff',
+                textSectionTitleColor: '#64748B',
+                selectedDayBackgroundColor: '#3B82F6',
+                selectedDayTextColor: '#ffffff',
+                todayTextColor: '#3B82F6',
+                dayTextColor: '#1E293B',
+                textDisabledColor: '#CBD5E1',
+                dotColor: '#3B82F6',
+                selectedDotColor: '#ffffff',
+                arrowColor: '#3B82F6',
+                monthTextColor: '#1E293B',
+              }}
+            />
+            
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setShowDatePicker(false)}
+            >
+              <Text style={styles.closeButtonText}>キャンセル</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+      
+      {/* Time Picker */}
+      {showTimePicker && (
+        <Modal
+          visible={showTimePicker}
+          transparent={true}
+          animationType="fade"
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.calendarContainer}>
+              <Text style={styles.modalTitle}>時間を選択</Text>
+              
+              <View style={styles.timePickerContainer}>
+                <ScrollView style={styles.timePickerScroll}>
+                  {hours.map((hour) => (
+                    <TouchableOpacity
+                      key={`hour-${hour}`}
+                      style={[
+                        styles.timePickerItem,
+                        selectedHour === hour && styles.selectedTimePickerItem
+                      ]}
+                      onPress={() => setSelectedHour(hour)}
+                    >
+                      <Text style={[
+                        styles.timePickerText,
+                        selectedHour === hour && styles.selectedTimePickerText
+                      ]}>
+                        {hour.toString().padStart(2, '0')}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+                
+                <Text style={styles.timePickerSeparator}>:</Text>
+                
+                <ScrollView style={styles.timePickerScroll}>
+                  {minutes.map((minute) => (
+                    <TouchableOpacity
+                      key={`minute-${minute}`}
+                      style={[
+                        styles.timePickerItem,
+                        selectedMinute === minute && styles.selectedTimePickerItem
+                      ]}
+                      onPress={() => setSelectedMinute(minute)}
+                    >
+                      <Text style={[
+                        styles.timePickerText,
+                        selectedMinute === minute && styles.selectedTimePickerText
+                      ]}>
+                        {minute.toString().padStart(2, '0')}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+              
+              <View style={styles.timePickerButtonContainer}>
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={() => setShowTimePicker(false)}
+                >
+                  <Text style={styles.closeButtonText}>キャンセル</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={styles.okButton}
+                  onPress={onTimeSelected}
+                >
+                  <Text style={styles.okButtonText}>設定</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      )}
+      
+      {/* Rest of form content */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>キャプション</Text>
         <TextInput
@@ -570,73 +787,7 @@ export default function CreateScheduledPostScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>プラットフォーム</Text>
-        <TouchableOpacity
-          style={styles.dropdownButton}
-          onPress={() => setShowPlatformDropdown(!showPlatformDropdown)}
-        >
-          <View style={styles.platformSelector}>
-            {platform ? (
-              <>
-                {getPlatformIcon(platform)}
-                <Text style={styles.dropdownButtonText}>
-                  {getPlatformName(platform)}
-                </Text>
-              </>
-            ) : (
-              <Text style={styles.dropdownPlaceholder}>
-                プラットフォームを選択
-              </Text>
-            )}
-          </View>
-          <ChevronDown size={20} {...{color: "#64748B"} as any} />
-        </TouchableOpacity>
-
-        {showPlatformDropdown && (
-          <Animated.View entering={FadeInDown} style={styles.dropdownMenu}>
-            {PLATFORMS.map((platformOption) => (
-              <TouchableOpacity
-                key={platformOption}
-                style={styles.dropdownItem}
-                onPress={() => selectPlatform(platformOption)}
-              >
-                <View style={styles.platformOption}>
-                  {getPlatformIcon(platformOption)}
-                  <Text style={styles.dropdownItemText}>
-                    {getPlatformName(platformOption)}
-                  </Text>
-                </View>
-                {platformOption === platform && (
-                  <Check size={16} {...{color: "#3B82F6"} as any} />
-                )}
-              </TouchableOpacity>
-            ))}
-          </Animated.View>
-        )}
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>投稿日時</Text>
-
-        <View style={styles.dateTimeContainer}>
-          <TouchableOpacity onPress={handleDateChange}>
-            <Text>{formatDate(date)}</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={handleTimeChange}>
-            <Text>{formatTime(date)}</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </Animated.View>
-  );
-
-  const renderStep3 = () => (
-    <Animated.View entering={FadeIn} style={styles.stepContainer}>
-      <Text style={styles.stepTitle}>許可設定</Text>
-      <Text style={styles.stepDescription}>投稿の許可設定を行ってください</Text>
-
-      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>許可設定</Text>
         <View style={styles.switchContainer}>
           <View style={styles.switchTextContainer}>
             <Text style={styles.switchLabel}>投稿前に許可を求める</Text>
@@ -777,7 +928,84 @@ export default function CreateScheduledPostScreen() {
           </View>
         </View>
       </View>
-    </Animated.View>
+    </View>
+  );
+
+  const renderStep3 = () => (
+    <View style={styles.stepContainer}>
+      <Text style={styles.stepTitle}>共有設定</Text>
+      <Text style={styles.stepDescription}>投稿を共有するユーザーを選択してください</Text>
+
+      {/* Contact selection section */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>共有先</Text>
+          <TouchableOpacity
+            style={styles.infoButton}
+            onPress={() => Alert.alert(
+              '顔認識について',
+              '写真内の顔を自動検出して、システムに登録されたユーザーを提案します。'
+            )}
+          >
+            <Info size={16} color="#64748B" />
+          </TouchableOpacity>
+        </View>
+        
+        <ScrollView
+          style={styles.contactsList}
+          contentContainerStyle={styles.contactsListContent}
+        >
+          {isLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#3B82F6" />
+              <Text style={styles.loadingText}>顔認識処理中...</Text>
+            </View>
+          ) : recognizedContacts.length > 0 ? (
+            recognizedContacts.map((contact) => (
+              <TouchableOpacity
+                key={contact.id}
+                style={[
+                  styles.contactItem,
+                  selectedContacts.includes(contact) && styles.selectedContactItem
+                ]}
+                onPress={() => toggleContactSelection(contact)}
+              >
+                <View style={styles.contactDetails}>
+                  {contact.avatarUrl ? (
+                    <Image
+                      source={contact.isLocalImage ? contact.avatarUrl : { uri: contact.avatarUrl }}
+                      style={styles.contactAvatar}
+                    />
+                  ) : (
+                    <View style={styles.contactAvatarPlaceholder}>
+                      <Text style={styles.contactAvatarPlaceholderText}>
+                        {contact.name.charAt(0)}
+                      </Text>
+                    </View>
+                  )}
+                  <View>
+                    <Text style={styles.contactName}>{contact.name}</Text>
+                    <Text style={styles.contactEmail}>{contact.email}</Text>
+                  </View>
+                </View>
+                
+                {selectedContacts.includes(contact) && (
+                  <Check size={20} color="#3B82F6" />
+                )}
+              </TouchableOpacity>
+            ))
+          ) : (
+            <View style={styles.emptyContacts}>
+              <Users size={48} color="#94A3B8" />
+              <Text style={styles.emptyContactsTitle}>共有先が見つかりません</Text>
+              <Text style={styles.emptyContactsDescription}>
+                顔認識に失敗したか、写真に人物が写っていない可能性があります。
+              </Text>
+            </View>
+          )}
+        </ScrollView>
+      </View>
+    </View>
   );
 
   const toggleContactSelection = (contact: ContactType) => {
@@ -1108,19 +1336,16 @@ const styles = StyleSheet.create({
   dateTimeButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    flex: 0.48,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 8,
+    padding: 12,
+    marginRight: 8,
+    flex: 1,
   },
-  dateTimeText: {
-    fontSize: 16,
-    fontWeight: '400',
+  dateTimeButtonText: {
+    marginLeft: 8,
+    fontSize: 14,
     color: '#0F172A',
-    marginLeft: 12,
   },
   switchContainer: {
     flexDirection: 'row',
@@ -1350,5 +1575,155 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontSize: 16,
     fontWeight: '500',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    padding: 20,
+  },
+  calendarContainer: {
+    width: '90%',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 15,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1E293B',
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  closeButton: {
+    backgroundColor: '#E2E8F0',
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+    marginTop: 15,
+  },
+  closeButtonText: {
+    color: '#1E293B',
+    fontWeight: '500',
+    fontSize: 14,
+  },
+  formGroup: {
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#0F172A',
+    marginBottom: 8,
+  },
+  selectedOptionContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  platformIconWrapper: {
+    marginRight: 8,
+  },
+  selectedOption: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: '#0F172A',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  infoButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: '#F1F5F9',
+  },
+  contactsList: {
+    flex: 1,
+  },
+  contactsListContent: {
+    padding: 16,
+  },
+  emptyContacts: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyContactsTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0F172A',
+    marginTop: 12,
+  },
+  emptyContactsDescription: {
+    fontSize: 14,
+    fontWeight: '400',
+    color: '#64748B',
+    marginTop: 8,
+  },
+  contactDetails: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  contactAvatarPlaceholderText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#64748B',
+  },
+  timePickerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 200,
+  },
+  timePickerScroll: {
+    height: 200,
+    width: 60,
+  },
+  timePickerItem: {
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 8,
+  },
+  selectedTimePickerItem: {
+    backgroundColor: '#E0F2FE',
+  },
+  timePickerText: {
+    fontSize: 20,
+    color: '#64748B',
+  },
+  selectedTimePickerText: {
+    color: '#3B82F6',
+    fontWeight: 'bold',
+  },
+  timePickerSeparator: {
+    fontSize: 24,
+    marginHorizontal: 10,
+    color: '#64748B',
+  },
+  timePickerButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 15,
+  },
+  okButton: {
+    backgroundColor: '#3B82F6',
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+    flex: 1,
+    marginLeft: 8,
+  },
+  okButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '500',
+    fontSize: 14,
   },
 });
